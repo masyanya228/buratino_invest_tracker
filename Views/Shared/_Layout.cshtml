@@ -1,0 +1,150 @@
+﻿<!DOCTYPE html>
+<html lang="ru" style="scroll-behavior: smooth;">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="stylesheet" href="~/lib/lightbox2/css/lightbox.css" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.1.2/css/tempusdominus-bootstrap-4.min.css" integrity="sha512-PMjWzHVtwxdq7m7GIxBot5vdxUY+5aKP9wpKtvnNBZrVv1srI8tU6xvFMzG8crLNcMj/8Xl/WWmo/oAP/40p1g==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ekko-lightbox/5.3.0/ekko-lightbox.css" integrity="sha512-Velp0ebMKjcd9RiCoaHhLXkR1sFoCCWXNp6w4zj1hfMifYB5441C+sKeBl/T/Ka6NjBiRfBBQRaQq65ekYz3UQ==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://gitcdn.github.io/bootstrap-toggle/2.2.2/css/bootstrap-toggle.min.css">
+
+    @* @Html.Partial("_YandexMetrika") *@
+</head>
+<body>
+    <script>
+        var windowOnloadAdd = function (event) {
+            if (window.onload) {
+                window.onload = window.onload + event;
+            } else {
+                window.onload = event;
+            };
+        };
+    </script>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-toggleable-lg navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Фотоотчет</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse d-lg-inline-flex flex-lg-row-reverse">
+                    @*<input type="checkbox" checked data-toggle="toggle" data-on="l" data-off="O" data-onstyle="success" data-style="ios">*@
+                    <ul class="navbar-nav flex-grow-1">
+                        @{
+                            Html.RenderPartial("_NavModal");
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <div class="row p-2 mb-0">
+            @if (ViewBag.HideLogin == null)
+                @Html.Partial("_LoginModal")
+        </div>
+    </div>
+    @if (false)
+    {
+        Html.RenderPartial("_TechStateInformer");
+    }
+    <main role="main" id="main" class="pb-3">
+        @RenderBody()
+    </main>
+
+    <div aria-live="polite" aria-atomic="true" style="top: 100px;display:none;">
+        <div style="position: absolute;top: 130px;right: 0;z-index: 1000;" class="">
+            <div class="toast show shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <img src="..." class="rounded mr-2" alt="...">
+                    <strong class="mr-auto">Bootstrap</strong>
+                    <small class="text-muted">just now</small>
+                    <button type="button" class="ml-2 mb-1 close p-2 rounded" data-dismiss="toast" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="toast-body">
+                    See? Just like this.
+                </div>
+            </div>
+
+            <div class="toast show shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <img src="..." class="rounded mr-2" alt="...">
+                    <strong class="mr-auto">Bootstrap</strong>
+                    <small class="text-muted">2 seconds ago</small>
+                    <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="toast-body">
+                    Heads up, toasts will stack automatically
+                </div>
+            </div>
+            <div class="toast show shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <img src="..." class="rounded mr-2" alt="...">
+                    <strong class="mr-auto">Bootstrap</strong>
+                    <small class="text-muted">2 seconds ago</small>
+                    <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="toast-body">
+                    Heads up, toasts will stack automatically
+                </div>
+            </div><div class="toast show shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-header">
+                    <img src="..." class="rounded mr-2" alt="...">
+                    <strong class="mr-auto">Bootstrap</strong>
+                    <small class="text-muted">2 seconds ago</small>
+                    <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="toast-body">
+                    Heads up, toasts will stack automatically
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2020 - Буратино
+            <a href="https://forms.gle/zgUm4qWMiR2L64Lt6" target="_blank">Сделать сайт лучше</a>
+        </div>
+    </footer>
+
+    <script type="text/javascript" src="~/lib/moment/moment-with-locales.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.1.2/js/tempusdominus-bootstrap-4.min.js" integrity="sha512-2JBCbWoMJPH+Uj7Wq5OLub8E5edWHlTM4ar/YJkZh3plwB2INhhOC3eDoqHm1Za/ZOSksrLlURLoyXVdfQXqwg==" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
+    <script src="~/js/xtensions.js" asp-append-version="true"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/poCollecting.js" asp-append-version="true"></script>
+    <script src="~/js/reportingOrder.js" asp-append-version="true"></script>
+    <script src="~/js/viewTableHotKeys.js" asp-append-version="true"></script>
+    <script src="~/js/viewTableSales.js" asp-append-version="true"></script>
+    <script src="~/js/fileInput.js" asp-append-version="true"></script>
+    <script src="~/js/delayedUpload.js" asp-append-version="true"></script>
+    <script src="~/js/viewTable.js" asp-append-version="true"></script>
+    <script src="~/js/UILogic.js" asp-append-version="true"></script>
+    <script src="~/js/visioRoom.js" asp-append-version="true"></script>
+    <script src="~/lib/lightbox2/js/lightbox.js"></script>
+    <script src="~/lib/jquery-freeze-table-master/dist/js/freeze-table.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ekko-lightbox/5.3.0/ekko-lightbox.min.js" integrity="sha512-Y2IiVZeaBwXG1wSV7f13plqlmFOx8MdjuHyYFVoYzhyRr3nH/NMDjTBSswijzADdNzMyWNetbLMfOpIPl6Cv9g==" crossorigin="anonymous"></script>
+    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>
