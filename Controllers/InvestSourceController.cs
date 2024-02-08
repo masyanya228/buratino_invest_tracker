@@ -2,9 +2,9 @@
 
 namespace Buratino.Controllers
 {
-    public class SourceController : Controller
+    public class InvestSourceController : Controller
     {
-        public IActionResult Index()
+        public IActionResult List()
         {
             return View();
         }

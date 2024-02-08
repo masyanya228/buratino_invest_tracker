@@ -301,6 +301,17 @@ namespace Buratino.Models.Xtensions
         }
 
         /// <summary>
+        /// Возвращает значение числового свойства
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <param name="propName"></param>
+        /// <returns></returns>
+        public static long GetLongProp(this object obj, string propName)
+        {
+            return (long)obj.GetValProp(propName);
+        }
+
+        /// <summary>
         /// Возвращает значение булева свойства
         /// </summary>
         /// <param name="obj"></param>

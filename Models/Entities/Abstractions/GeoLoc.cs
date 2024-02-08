@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Buratino.Models.Entities.Abstractions
+﻿namespace Buratino.Models.Entities.Abstractions
 {
     public abstract class GeoLoc : PersistentEntity
     {
@@ -16,7 +14,7 @@ namespace Buratino.Models.Entities.Abstractions
         }
         public static double DistanceBetween(double lat1, double lon1, double lat2, double lon2)
         {
-            double R = 6371000f; // Radius of the earth in m
+            double R = 6371000f;
             double dLat = (lat1 - lat2) * Math.PI / 180f;
             double dLon = (lon1 - lon2) * Math.PI / 180f;
             double a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +

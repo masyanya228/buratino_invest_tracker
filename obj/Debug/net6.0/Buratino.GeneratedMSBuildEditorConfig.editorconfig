@@ -32,6 +32,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVycm9yLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[E:/source/Buratino/Views/Shared/View.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXFZpZXcuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [E:/source/Buratino/Views/Shared/_LoginModal.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9Mb2dpbk1vZGFsLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
