@@ -2,7 +2,7 @@
 {
     public interface IRepository<T>
     {
-        T Get(long id);
+        T Get(Guid id);
         IQueryable<T> GetAll();
         T Insert(T entity);
         T Update(T entity);

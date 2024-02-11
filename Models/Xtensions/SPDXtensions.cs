@@ -1,4 +1,5 @@
-﻿using Buratino.Models.Helpers;
+﻿using Buratino.Entities.Abstractions;
+using Buratino.Models.Helpers;
 
 using LiteDB;
 
@@ -8,6 +9,80 @@ namespace Buratino.Models.Xtensions
 {
     public static class SPDXtensions
     {
+        public static object StringValueCast(this string source, Type type)
+        {
+            if (type is null)
+            {
+                throw new ArgumentNullException(nameof(type));
+            }
+
+            if (type.Name == "Nullable`1")
+            {
+                type = type.GenericTypeArguments.FirstOrDefault();
+                if (source == null)
+                    return null;
+            }
+
+            if (type.IsAssignableTo(typeof(EntityBase)))
+            {
+                var entity = Activator.CreateInstance(type) as EntityBase;
+                if (Guid.TryParse(source, out Guid entityId))
+                {
+                    entity.Id = entityId;
+                }
+                else
+                {
+                    return null;
+                }
+                return entity;
+            }
+            else if (type.IsEnum)
+            {
+                if (Enum.TryParse(type, source, out object res))
+                {
+                    return res;
+                }
+                else
+                {
+                    return Activator.CreateInstance(type);
+                }
+            }
+            else
+            {
+                if (type == typeof(string))
+                {
+                    return source;
+                }
+                else if (type == typeof(int))
+                {
+                    if (int.TryParse(source, out int res))
+                        return res;
+                }
+                else if (type == typeof(long))
+                {
+                    if (long.TryParse(source, out long res))
+                        return res;
+                }
+                else if (type == typeof(decimal))
+                {
+                    if (decimal.TryParse(source, out decimal res))
+                        return res;
+                }
+                else if (type == typeof(double))
+                {
+                    if (double.TryParse(source, out double res))
+                        return res;
+                }
+                
+                else if (type == typeof(DateTime))
+                {
+                    if (DateTime.TryParse(source, out DateTime res))
+                        return res;
+                }
+            }
+            return null;
+        }
+
         public static object Cast(this object obj, Type target)
         {
             if (obj == null)

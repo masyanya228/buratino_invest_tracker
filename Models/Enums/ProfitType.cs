@@ -1,8 +1,13 @@
-﻿namespace Buratino.Models.Enums
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Buratino.Models.Enums
 {
     public enum ProfitType
     {
-        WithIncome = 1,
-        WithoutIncome = 0
+        [Display(Name = "С начислением прибыли")]
+        WithIncome = 0,
+
+        [Display(Name = "Без начисления прибыли")]
+        WithoutIncome = 1
     }
 }

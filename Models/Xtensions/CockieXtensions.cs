@@ -1,6 +1,6 @@
 ﻿using Buratino.DI;
+using Buratino.Entities;
 using Buratino.Models.DomainService.DomainStructure;
-using Buratino.Models.Entities;
 
 using LiteDB;
 
@@ -43,16 +43,16 @@ namespace Buratino.Models.Xtensions
                 return null;
             }
         }
-        public static Account GetOperator(long accId)
+        public static Account GetOperator(Guid accId)
         {
-            if (accId <= 0)
+            if (accId == Guid.Empty)
                 return null;
             var acc = Container.ResolveDomainService<Account>().Get(accId);
             return acc;
         }
         public static Account GetOperator(HttpContext httpContext)
         {
-            var userId = long.Parse(httpContext.User?.Identity?.Name ?? "0");
+            var userId = Guid.Parse(httpContext.User?.Identity?.Name ?? Guid.Empty.ToString());
             return GetOperator(userId);
         }
         public static ClientQuene GetClientBySession(string ses)
@@ -75,7 +75,7 @@ namespace Buratino.Models.Xtensions
                 return null;
             }
         }
-        public static ClientQuene GetClient(long id)
+        public static ClientQuene GetClient(Guid id)
         {
             return ClientQuenes.FirstOrDefault(x => x.Accaunt != null && x.Accaunt.Id == id);
         }

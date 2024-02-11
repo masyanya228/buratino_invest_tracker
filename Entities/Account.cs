@@ -1,12 +1,11 @@
 ﻿using BCrypt.Net;
-
+using Buratino.Entities.Abstractions;
 using Buratino.Models.Attributes;
-using Buratino.Models.Entities.Abstractions;
 using Buratino.Models.Xtensions;
 
 using System.ComponentModel.DataAnnotations;
 
-namespace Buratino.Models.Entities
+namespace Buratino.Entities
 {
     public class Account : GeoLoc
     {
@@ -16,7 +15,7 @@ namespace Buratino.Models.Entities
         [TitleDescribe("Пароль", "")]
         public virtual string Pass { get; set; }
 
-        [TitleDescribe("Фамилия","")]
+        [TitleDescribe("Фамилия", "")]
         [RegularExpression(@"^([а-яА-Яё-]{2,24})$", ErrorMessage = "Фамилия может состоять только из русский букв")]
         public virtual string Surname { get; set; }
 
@@ -38,10 +37,10 @@ namespace Buratino.Models.Entities
 
         [TitleDescribe("Дата регистрации")]
         public virtual DateTime RegStamp { get; set; }
-        
+
         [TitleDescribe("Заблокирован?")]
         public virtual bool IsBlocked { get; set; }
-        
+
         [TitleDescribe("Временная блокировка истекает")]
         public virtual DateTime DynamicBlockExpiring { get; set; }
 

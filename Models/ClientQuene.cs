@@ -1,4 +1,4 @@
-﻿using Buratino.Models.Entities;
+﻿using Buratino.Entities;
 
 namespace Buratino.Models
 {
@@ -19,7 +19,7 @@ namespace Buratino.Models
         {
             if (Session != null)
             {
-                if (Accaunt.Id > 0)
+                if (Accaunt.Id != Guid.Empty)
                 {
                     return ClientState.AuthedActive;
                 }
@@ -30,7 +30,7 @@ namespace Buratino.Models
             }
             else
             {
-                if (Accaunt.Id > 0)
+                if (Accaunt.Id != Guid.Empty)
                 {
                     return ClientState.AuthedNotActive;
                 }

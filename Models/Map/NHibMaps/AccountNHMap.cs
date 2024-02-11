@@ -1,14 +1,10 @@
-﻿using Buratino.Models.Entities;
-using Buratino.Models.Map.Implementations;
+﻿using Buratino.Entities;
+using Buratino.Models.Map.NHibMaps;
 
-public class AccountNHMap : NHibMapBase<Account>
+public class AccountNHMap : NHSubclassClassMap<Account>
 {
     public AccountNHMap()
     {
-        Id(item => item.Id).GeneratedBy.Increment();
-        Map(x => x.Name);
-        Map(x => x.TimeStamp);
-        Map(x => x.IsDeleted);
         Map(x => x.Email);
         Map(x => x.Pass);
         Table("Accounts");

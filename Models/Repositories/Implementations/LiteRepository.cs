@@ -1,5 +1,5 @@
-﻿using Buratino.Models.DomainService;
-using Buratino.Models.Entities.Abstractions;
+﻿using Buratino.Entities.Abstractions;
+using Buratino.Models.DomainService;
 
 using LiteDB;
 using LiteDB.Queryable;
@@ -21,7 +21,7 @@ namespace Buratino.Models.Repositories.Implementations
             return Collection.Delete(entity.Id);
         }
 
-        public override T Get(long id)
+        public override T Get(Guid id)
         {
             var entity = GetAll().SingleOrDefault(x => x.Id == id);
             if (entity == null)

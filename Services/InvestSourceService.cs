@@ -1,4 +1,4 @@
-﻿using Buratino.Models.Entities;
+﻿using Buratino.Entities;
 
 namespace Buratino.Services
 {

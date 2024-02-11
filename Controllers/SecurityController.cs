@@ -1,5 +1,4 @@
 ﻿using Buratino.Models.DomainService.DomainStructure;
-using Buratino.Models.Entities;
 using Buratino.Models.Xtensions;
 
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -8,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 using System.Security.Claims;
+using Buratino.Entities;
 
 namespace Buratino.Controllers
 {
@@ -62,7 +62,7 @@ namespace Buratino.Controllers
             }
         }
 
-        private async Task Authenticate(long userId)
+        private async Task Authenticate(Guid userId)
         {
             // создаем один claim
             var claims = new List<Claim>

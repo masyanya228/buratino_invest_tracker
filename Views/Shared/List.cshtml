@@ -1,0 +1,16 @@
+﻿@model CrudListDto
+
+@{
+    ViewData["Title"] = Model.ListName;
+}
+
+<h1>@Model.ListName</h1>
+
+<p>
+    <a asp-action="Create">Добавить</a>
+</p>
+<table class="table">
+    @{
+        await Html.RenderPartialAsync($"PartialIndex", Model);
+    }
+</table>

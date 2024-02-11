@@ -1,0 +1,8 @@
+﻿@model InputDto
+
+<div class="form-group form-check">
+    <label class="form-check-label">
+        <input type='hidden' value='false' name='@Model.Name'>
+        <input class="form-check-input" @(!Model.IsEditable ? "disabled" : "") type="checkbox" id="@Model.Name" name="@Model.Name" value="true" @((bool)Model.Value ? "checked" : "")> @Model.DisplayName
+    </label>
+</div>

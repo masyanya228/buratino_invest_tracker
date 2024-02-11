@@ -1,4 +1,4 @@
-﻿namespace Buratino.Models.Entities.Abstractions
+﻿namespace Buratino.Entities.Abstractions
 {
     public abstract class GeoLoc : PersistentEntity
     {

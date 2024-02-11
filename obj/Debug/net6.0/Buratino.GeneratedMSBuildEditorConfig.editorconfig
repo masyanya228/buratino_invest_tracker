@@ -24,16 +24,48 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxQcml2YWN5LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
+[E:/source/Buratino/Views/Inputs/InputBool.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSW5wdXRzXElucHV0Qm9vbC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/source/Buratino/Views/Inputs/InputDateTime.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSW5wdXRzXElucHV0RGF0ZVRpbWUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/source/Buratino/Views/Inputs/InputNumber.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSW5wdXRzXElucHV0TnVtYmVyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/source/Buratino/Views/Inputs/InputString.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSW5wdXRzXElucHV0U3RyaW5nLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [E:/source/Buratino/Views/Security/LoginPage.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2VjdXJpdHlcTG9naW5QYWdlLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/source/Buratino/Views/Shared/Create.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXENyZWF0ZS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/source/Buratino/Views/Shared/Edit.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVkaXQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
 [E:/source/Buratino/Views/Shared/Error.cshtml]
 build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVycm9yLmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
-[E:/source/Buratino/Views/Shared/View.cshtml]
-build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXFZpZXcuY3NodG1s
+[E:/source/Buratino/Views/Shared/List.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXExpc3QuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/source/Buratino/Views/Shared/PartialDetails.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXFBhcnRpYWxEZXRhaWxzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[E:/source/Buratino/Views/Shared/PartialIndex.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXFBhcnRpYWxJbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
 [E:/source/Buratino/Views/Shared/_LoginModal.cshtml]

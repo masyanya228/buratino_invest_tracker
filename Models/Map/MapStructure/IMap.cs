@@ -1,5 +1,4 @@
-﻿using Buratino.Models.Entities.Abstractions;
-
+﻿using Buratino.Entities.Abstractions;
 using System.Linq.Expressions;
 
 namespace Buratino.Models.Map.MapStructure

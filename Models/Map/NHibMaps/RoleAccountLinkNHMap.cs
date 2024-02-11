@@ -1,11 +1,10 @@
-﻿using Buratino.Models.Entities;
-using Buratino.Models.Map.Implementations;
+﻿using Buratino.Entities;
+using Buratino.Models.Map.NHibMaps;
 
-public class RoleAccountLinkNHMap : NHibMapBase<RoleAccountLink>
+public class RoleAccountLinkNHMap : NHSubclassClassMap<RoleAccountLink>
 {
     public RoleAccountLinkNHMap()
     {
-        Id(item => item.Id).GeneratedBy.Increment();
         References(item => item.Role, "RoleId");
         References(item => item.Account, "AccountId");
         Table("RoleAccountLinks");

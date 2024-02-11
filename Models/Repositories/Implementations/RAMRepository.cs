@@ -1,21 +1,21 @@
 ﻿using Buratino.Models.DomainService;
 using System.Collections.Concurrent;
-using Buratino.Models.Entities.Abstractions;
+using Buratino.Entities.Abstractions;
 
 namespace Buratino.Models.Repositories.Implementations
 {
     public class RAMRepository<T> : RepositoryBase<T> where T : IEntityBase
     {
-        public ConcurrentDictionary<long, T> Collection;
+        public ConcurrentDictionary<Guid, T> Collection;
 
         public RAMRepository()
         {
-            Collection = new ConcurrentDictionary<long, T>();
+            Collection = new ConcurrentDictionary<Guid, T>();
         }
 
         public override bool Delete(T entity) => Collection.TryRemove(entity.Id, out _);
 
-        public override T Get(long id) => Collection.TryGetValue(id, out T value)
+        public override T Get(Guid id) => Collection.TryGetValue(id, out T value)
             ? value
             : throw new Exception("Не получилось добавить элемент в репозиторий");
 
@@ -23,7 +23,7 @@ namespace Buratino.Models.Repositories.Implementations
 
         public override T Insert(T entity)
         {
-            long newId = GetNextKey();
+            var newId = GetNextKey();
             entity.Id = newId;
             return Collection.TryAdd(newId, entity)
                 ? entity
@@ -35,8 +35,6 @@ namespace Buratino.Models.Repositories.Implementations
             Collection[entity.Id] = entity;
             return entity;
         }
-        private long GetNextKey() => Collection.Keys.Any()
-            ? Collection.Keys.Max() + 1
-            : 1;
+        private Guid GetNextKey() => Guid.NewGuid();
     }
 }

@@ -1,6 +1,6 @@
 ﻿using Buratino.DI;
+using Buratino.Entities.Abstractions;
 using Buratino.Models.DomainService;
-using Buratino.Models.Entities.Abstractions;
 using Buratino.Models.Repositories.Implementations.Postgres;
 
 using NHibernate;
@@ -35,7 +35,7 @@ namespace Buratino.Models.Repositories.Implementations
             }
         }
 
-        public override T Get(long id)
+        public override T Get(Guid id)
         {
             using (var session = SessionFactory.OpenSession())
             {

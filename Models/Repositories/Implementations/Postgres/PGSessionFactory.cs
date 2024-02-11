@@ -4,9 +4,11 @@ using NHibernate.Tool.hbm2ddl;
 using NHibernate;
 using Buratino.Models.Xtensions;
 using NHibernate.Cfg;
-using Buratino.Models.Map.Implementations;
+using Buratino.Models.Map.NHibMaps;
+using NHibernate.Dialect;
+using Buratino.Models.Repositories.Implementations.Postgres;
 
-namespace Buratino.Models.Repositories.Implementations.Postgres
+namespace Buratino.Repositories.Implementations.Postgres
 {
     public class PGSessionFactory : IPGSessionFactory
     {
@@ -26,7 +28,7 @@ namespace Buratino.Models.Repositories.Implementations.Postgres
 
         private ISessionFactory CreateSessionFactory()
         {
-            var mappings = typeof(NHibMapBase<>).GetImplementations();
+            var mappings = typeof(INHMap).GetImplementations();
             var db = Fluently
                 .Configure()
                     .Database(
@@ -36,7 +38,8 @@ namespace Buratino.Models.Repositories.Implementations.Postgres
                             .Port(5432)
                             .Database("postgres")
                             .Username("postgres")
-                            .Password("007007Qq")));
+                            .Password("007007Qq"))
+                        .Dialect<PostgreSQL82Dialect>().ShowSql());
 
             foreach (var item in mappings)
             {

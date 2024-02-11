@@ -1,0 +1,29 @@
+﻿@model CrudCreateDto
+
+@{
+    ViewData["Title"] = "Создать " + @Model.EntityName;
+
+    var type = Model.Entity.GetType();
+    var propertyList = type.GetDefaultList().ToArray();
+}
+
+<h1>Создать @Model.EntityName</h1>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form id="fileForm" asp-action="Create" method="post" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            @{
+                await Html.RenderPartialAsync($"PartialDetails", Model);
+            }
+            <div class="form-group">
+                <input type="submit" value="Создать" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">К списку</a>
+</div>
+

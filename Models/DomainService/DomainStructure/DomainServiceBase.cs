@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 
 using Buratino.DI;
-using Buratino.Models.Entities.Abstractions;
+using Buratino.Entities.Abstractions;
 
 using Buratino.Models.Xtensions;
 
@@ -22,11 +22,17 @@ namespace Buratino.Models.DomainService.DomainStructure
             {
                 if (item.PropertyType.IsImplementationOfClass(typeof(IEntityBase)))
                 {
+                    object value = item.GetValue(entity);
+                    if (value == null)
+                    {
+                        continue;
+                    }
+
                     var subDomain = Container.ResolveDomainService(item.PropertyType);
-                    subDomain.InvokeMethod("Save", new object[] { item.GetValue(entity) });
+                    subDomain.InvokeMethod("Save", new object[] { value });
                 }
             }
-            return entity.Id > 0
+            return entity.Id != Guid.Empty
                 ? Repository.Update(entity)
                 : Repository.Insert(entity);
         }
@@ -36,12 +42,12 @@ namespace Buratino.Models.DomainService.DomainStructure
             return Repository.Delete(entity);
         }
 
-        public T Get(long id)
+        public T Get(Guid id)
         {
             return Repository.Get(id);
         }
 
-        public IEnumerable<T> GetAll()
+        public IQueryable<T> GetAll()
         {
             return Repository.GetAll();
         }

@@ -1,4 +1,4 @@
-﻿using Buratino.Models.Entities.Abstractions;
+﻿using Buratino.Entities.Abstractions;
 
 namespace Buratino.Models.DomainService
 {
@@ -7,7 +7,7 @@ namespace Buratino.Models.DomainService
     {
         public abstract bool Delete(T entity);
         
-        public abstract T Get(long id);
+        public abstract T Get(Guid id);
         
         public abstract IQueryable<T> GetAll();
 

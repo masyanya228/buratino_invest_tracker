@@ -1,6 +1,4 @@
-﻿using Buratino.DI;
-using Buratino.Models.DomainService.DomainStructure;
-using Buratino.Models.Entities;
+﻿using Buratino.Entities;
 using LiteDB;
 
 namespace Buratino
@@ -24,11 +22,6 @@ namespace Buratino
             InvestCharges = db.GetCollection<InvestCharge>();
             InvestPoints = db.GetCollection<InvestPoint>();
 
-        }
-
-        internal static Account GetAccById(long id)
-        {
-            return Container.Resolve<IDomainService<Account>>().Get(id);
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿using Buratino.DI;
-using Buratino.Models.Entities.Abstractions;
+using Buratino.Entities.Abstractions;
 
 using System.Linq.Expressions;
 

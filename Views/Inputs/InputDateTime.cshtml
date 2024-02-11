@@ -1,0 +1,7 @@
+﻿@model InputDto
+
+<div class="form-group">
+    <label class="control-label" for="@Model.Name">@Model.DisplayName</label>
+    <input class="form-control" @(!Model.IsEditable ? "disabled" : "") type="datetime-local" id="@Model.Name" name="@Model.Name" value="@Model.Value.AsDateTime().AsHtmlDateTime()">
+    <span class="text-danger field-validation-valid" data-valmsg-for="@Model.Name" data-valmsg-replace="true"></span>
+</div>

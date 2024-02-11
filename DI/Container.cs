@@ -1,5 +1,6 @@
-﻿using Buratino.Models.DomainService.DomainStructure;
-using Buratino.Models.Entities.Abstractions;
+﻿using Buratino.Entities.Abstractions;
+using Buratino.Models.DomainService;
+using Buratino.Models.DomainService.DomainStructure;
 
 
 using System;
@@ -58,6 +59,11 @@ namespace Buratino.DI
         {
             var genericType = typeof(IDomainService<>).MakeGenericType(type);
             return Resolve(genericType);
+        }
+
+        public static ObjectDomainService ResolveObjectDomainService(Type type)
+        {
+            return new ObjectDomainService(ResolveDomainService(type));
         }
     }
 }

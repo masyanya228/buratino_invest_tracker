@@ -1,6 +1,6 @@
 ﻿using Buratino.DI;
+using Buratino.Entities;
 using Buratino.Models.DomainService.DomainStructure;
-using Buratino.Models.Entities;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -54,8 +54,8 @@ namespace Buratino.Controllers
         protected Account GetOperator()
         {
             var userId = this.User?.Claims?.FirstOrDefault()?.Value ?? "0";
-            var id = long.Parse(userId);
-            if (id > 0)
+            var id = Guid.Parse(userId);
+            if (id != Guid.Empty)
             {
                 Account = AccountDomainService.Get(id);
                 PermissionList = RAL.GetAll().Where(x => x.Account == Account).Select(x => x.Role.Name).ToArray();

@@ -1,5 +1,5 @@
-﻿using Buratino.Models.DomainService.DomainStructure;
-using Buratino.Models.Entities.Abstractions;
+﻿using Buratino.Entities.Abstractions;
+using Buratino.Models.DomainService.DomainStructure;
 
 namespace Buratino.Models.DomainService
 {

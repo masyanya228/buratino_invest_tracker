@@ -1,0 +1,105 @@
+﻿@model CrudDetailsDto
+@{
+    var type = Model.Entity.GetType();
+    var propertyList = type.GetDefaultList().ToArray();
+}
+
+@for (int i = 0; i < propertyList.Length; i++)
+{
+    var prop = propertyList[i];
+    var propType = propertyList[i].PropertyType;
+    var name = propertyList[i].Name;
+    var display = propertyList[i].GetAttribute<DisplayAttribute>();
+
+    var displayName = display?.Name ?? propertyList[i].Name;
+    var value = propertyList[i].GetValue(Model.Entity);
+
+    if (propType.Name == "IList`1")
+    {
+        continue;
+    }
+
+    if (propType.Name == "Nullable`1")
+    {
+        propType = propType.GenericTypeArguments.FirstOrDefault();
+    }
+
+    if (propType.IsAssignableTo(typeof(IEntityBase)))
+    {
+        var selectedValue = value as EntityBase;
+        var itemList = Container.ResolveObjectDomainService(propType).GetAllEntities();
+        <div class="form-group">
+            <label class="control-label" for="@name">@displayName</label>
+            <select id="@name" name='@name' class="form-control">
+                @if (selectedValue == null)
+                {
+                    <option value="" selected></option>
+                }
+                else
+                {
+                    <option value=""></option>
+                }
+                @foreach (var item in itemList)
+                {
+                    if (item.Id == (selectedValue?.Id ?? Guid.Empty))
+                    {
+                        <option value="@(item.Id)" selected>@item.ToString()</option>
+                    }
+                    else
+                    {
+                        <option value="@(item.Id)">@item.ToString()</option>
+                    }
+                }
+            </select>
+            <span class="text-danger field-validation-valid" data-valmsg-for="@name" data-valmsg-replace="true"></span>
+        </div>
+    }
+    else if (propType.IsEnum)
+    {
+        <div class="form-group">
+            <label class="control-label" for="@name">@displayName</label>
+            <select required id="@name" name='@name' class="form-control">
+                @{
+                    var enumList = Enum.GetValues(propType);
+                    foreach (var item in enumList)
+                    {
+                        var enumDisplayName = ((Enum)item).GetAttribute<DisplayAttribute>()?.Name ?? item.ToString();
+                        if (item.ToString() == value.ToString())
+                        {
+                            <option value="@((int)item)" selected>@enumDisplayName</option>
+                        }
+                        else
+                        {
+                            <option value="@((int)item)">@enumDisplayName</option>
+                        }
+                    }
+                }
+            </select>
+            <span class="text-danger field-validation-valid" data-valmsg-for="@name" data-valmsg-replace="true"></span>
+        </div>
+    }
+    else if (propType.Name == "String" && name.StartsWith("Image"))
+    {
+        <input class="form-control" type="file" id="@name" name="@name"> @displayName
+    }
+    else
+    {
+        switch (propType.Name)
+        {
+            case "Boolean":
+                @await Html.PartialAsync("/Views/Inputs/InputBool.cshtml", new InputDto(name,displayName, value,prop.CanWrite))
+                break;
+            case "DateTime":
+                @await Html.PartialAsync("/Views/Inputs/InputDateTime.cshtml", new InputDto(name,displayName, value,prop.CanWrite))
+                break;
+            case "Int16":
+            case "Int32":
+            case "Int64":
+                @await Html.PartialAsync("/Views/Inputs/InputNumber.cshtml", new InputDto(name,displayName, value,prop.CanWrite))
+                break;
+            default:
+                @await Html.PartialAsync("/Views/Inputs/InputString.cshtml", new InputDto(name,displayName, value,prop.CanWrite))
+                break;
+        }
+    }
+}

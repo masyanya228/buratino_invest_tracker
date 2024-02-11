@@ -1,4 +1,4 @@
-﻿using Buratino.Models.Entities;
+﻿using Buratino.Entities;
 using Buratino.Models.Map.MapStructure;
 
 namespace ServiceCenter.Map

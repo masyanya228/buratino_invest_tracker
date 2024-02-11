@@ -1,14 +1,10 @@
-﻿using Buratino.Models.Entities;
-using Buratino.Models.Map.Implementations;
+﻿using Buratino.Entities;
+using Buratino.Models.Map.NHibMaps;
 
-public class RoleNHMap : NHibMapBase<Role>
+public class RoleNHMap : NHSubclassClassMap<Role>
 {
     public RoleNHMap()
     {
-        Id(item => item.Id).GeneratedBy.Increment();
-        Map(x => x.Name);
-        Map(x => x.TimeStamp);
-        Map(x => x.IsDeleted);
         Table("Roles");
     }
 }

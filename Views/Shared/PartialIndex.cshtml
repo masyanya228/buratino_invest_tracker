@@ -1,0 +1,48 @@
+﻿@model CrudListDto
+
+@{
+    var type = Model.EntityType;
+    var propertyList = type.GetProperties().ToArray();
+}
+<thead>
+    <tr>
+        @for (int i = 0; i < propertyList.Length; i++)
+        {
+            <th>
+                @{
+                    var display = propertyList[i].GetAttribute<DisplayAttribute>();
+                    var displayName = display?.Name ?? propertyList[i].Name;
+                }
+                @displayName
+            </th>
+        }
+        <th></th>
+    </tr>
+</thead>
+<tbody>
+    @foreach (var item in Model.EntityList)
+    {
+        <tr>
+            @for (int i = 0; i < propertyList.Length; i++)
+            {
+            <th>
+                @{
+                    var value = propertyList[i].GetValue(item);
+                }
+                @if (propertyList[i].PropertyType == typeof(bool))
+                {
+                    <input disabled type="checkbox" @((bool)value ? "checked" : "")>
+                }
+                else
+                {
+                    @value
+                }
+            </th>
+            }
+            <td>
+                @Html.ActionLink("Edit", "Edit", new { id = item.Id }) |
+                @Html.ActionLink("Delete", "Delete", new { id = item.Id })
+            </td>
+        </tr>
+    }
+</tbody>

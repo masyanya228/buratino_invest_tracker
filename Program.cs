@@ -1,5 +1,4 @@
 using Buratino.Models.DomainService.DomainStructure;
-using Buratino.Models.Entities;
 using Buratino;
 
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -12,6 +11,8 @@ using Buratino.Models.Repositories.Implementations;
 using Buratino.Models.Map.MapStructure;
 using Buratino.Models.Map.Implementations;
 using Buratino.Models.Repositories.Implementations.Postgres;
+using Buratino.Entities;
+using Buratino.Repositories.Implementations.Postgres;
 
 internal class Program
 {
@@ -84,7 +85,6 @@ internal class Program
 
     public static void OnStarted()
     {
-        DBContext.Init();
         var accounts = Container.ResolveDomainService<Account>();
         if (!accounts.GetAll().Any(x => x.Email == "admin"))
         {
@@ -101,7 +101,7 @@ internal class Program
 
         Container.ResolveDomainService<RoleAccountLink>().Save(new RoleAccountLink()
         {
-            Account = accounts.Get(1),
+            Account = accounts.GetAll().First(),
             Role = new Role()
             {
                 Name = "Administrator"

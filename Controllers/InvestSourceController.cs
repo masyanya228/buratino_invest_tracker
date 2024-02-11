@@ -1,12 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Buratino.Entities;
 
 namespace Buratino.Controllers
 {
-    public class InvestSourceController : Controller
+    public class InvestSourceController : EntityController<InvestSource>
     {
-        public IActionResult List()
-        {
-            return View();
-        }
     }
 }

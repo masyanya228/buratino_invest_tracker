@@ -1,6 +1,6 @@
-﻿using Buratino.Models.Entities.Abstractions;
+﻿using Buratino.Entities.Abstractions;
 
-namespace Buratino.Models.Entities
+namespace Buratino.Entities
 {
     public class RoleAccountLink : EntityBase
     {

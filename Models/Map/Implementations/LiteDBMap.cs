@@ -1,4 +1,4 @@
-﻿using Buratino.Models.Entities.Abstractions;
+﻿using Buratino.Entities.Abstractions;
 using Buratino.Models.Map.MapStructure;
 using LiteDB;
 
