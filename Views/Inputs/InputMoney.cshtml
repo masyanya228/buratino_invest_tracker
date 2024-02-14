@@ -1,0 +1,7 @@
+﻿@model InputDto
+
+<div class="form-group">
+    <label class="control-label" for="@Model.Name">@Model.DisplayName</label>
+    <input class="form-control" @(!Model.IsEditable ? "disabled" : "") type="number" min="0.00" step="0.01" data-val="true" id="@Model.Name" name="@Model.Name" value="@(Model.Value?.ToString()?.Replace(",", ".") ?? "0")">
+    <span class="text-danger field-validation-valid" data-valmsg-for="@Model.Name" data-valmsg-replace="true"></span>
+</div>

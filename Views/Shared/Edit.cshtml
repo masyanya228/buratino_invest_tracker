@@ -1,14 +1,10 @@
 ﻿@model CrudEditDto
-
 @{
     ViewData["Title"] = "Редактирование " + @Model.EntityName;
 
     var type = Model.Entity.GetType();
-    var propertyList = type.GetProperties()
-        .Where(x => x.CanWrite) 
-        .ToArray();
+    var propertyList = type.GetDefaultList().ToArray();
 }
-
 <h1>Редактирование @Model.EntityName</h1>
 <hr />
 <div class="row">
@@ -19,112 +15,6 @@
             @{
                 await Html.RenderPartialAsync($"PartialDetails", Model);
             }
-            @* @for (int i = 0; i < propertyList.Length; i++)
-            {
-                var propType = propertyList[i].PropertyType;
-                var name = propertyList[i].Name;
-                var display = propertyList[i].GetCustomAttributes(typeof(DisplayAttribute), false).SingleOrDefault() as DisplayAttribute;
-                var displayName = display?.Name ?? propertyList[i].Name;
-                var value = propertyList[i].GetValue(Model.Entity);
-
-                if (propType.Name == "IList`1")
-                {
-                    continue;
-                }
-
-                if (propType.Name == "Nullable`1")
-                {
-                    propType = propType.GenericTypeArguments.FirstOrDefault();
-                }
-
-                if (propType.IsAssignableTo(typeof(EntityBase)))
-                {
-                    <div class="form-group">
-                        <label class="control-label" for="@name">@displayName</label>
-                        <select required id="@name" name='@name' class="form-control">
-                            @{
-                                var selected = value as EntityBase;
-                                var itemList = Container.ResolveObjectDomainService(propType).GetAllEntities();
-                                foreach (var item in itemList)
-                                {
-                                    if (item.Id == (selected?.Id ?? Guid.Empty))
-                                    {
-                                        <option value="@(item.Id)" selected>@item</option>
-                                    }
-                                    else
-                                    {
-                                        <option value="@(item.Id)">@item</option>
-                                    }
-                                }
-                            }
-                        </select>
-                        <span class="text-danger field-validation-valid" data-valmsg-for="@name" data-valmsg-replace="true"></span>
-                    </div>
-                }
-                else if (propType.IsEnum)
-                {
-                    <div class="form-group">
-                        <label class="control-label" for="@name">@displayName</label>
-                        <select required id="@name" name='@name' class="form-control">
-                            @{
-                                var enumList = Enum.GetValues(propType);
-                                foreach (var item in enumList)
-                                {
-                                    var enumDisplayName = ((Enum)item).GetAttribute<DisplayAttribute>()?.Name ?? item.ToString();
-                                    if (item.ToString() == value.ToString())
-                                    {
-                                        <option value="@((int)item)" selected>@enumDisplayName</option>
-                                    }
-                                    else
-                                    {
-                                        <option value="@((int)item)">@enumDisplayName</option>
-                                    }
-                                }
-                            }
-                        </select>
-                        <span class="text-danger field-validation-valid" data-valmsg-for="@name" data-valmsg-replace="true"></span>
-                    </div>
-                }
-                else if (propType.Name == "String" && (name.StartsWith("_") || name == "Image"))
-                {
-                    <input class="form-control" type="file" id="@name" name="@name"> @displayName
-                }
-                else
-                {
-                    switch (propType.Name)
-                    {
-                        case "Boolean":
-                            <div class="form-group form-check">
-                                <label class="form-check-label">
-                                    <input type='hidden' value='false' name='@name'>
-                                    <input class="form-check-input" type="checkbox" id="@name" name="@name" value="true" @((bool)value ? "checked" : "")> @displayName
-                                </label>
-                            </div>
-                            break;
-                        case "DateTime":
-                            <div class="form-group">
-                                <label class="control-label" for="@name">@displayName</label>
-                                <input class="form-control" type="datetime-local" id="@name" name="@name" value="@(value.AsDateTime().AsHtmlDateTime())">
-                                <span class="text-danger field-validation-valid" data-valmsg-for="@name" data-valmsg-replace="true"></span>
-                            </div>
-                            break;
-                        case "Int32":
-                            <div class="form-group">
-                                <label class="control-label" for="@name">@displayName</label>
-                                <input class="form-control" type="number" data-val="true" id="@name" name="@name" value="@value">
-                                <span class="text-danger field-validation-valid" data-valmsg-for="@name" data-valmsg-replace="true"></span>
-                            </div>
-                            break;
-                        default:
-                            <div class="form-group">
-                                <label class="control-label" for="@name">@displayName</label>
-                                <input class="form-control" type="text" id="@name" name="@name" value="@value">
-                                <span class="text-danger field-validation-valid" data-valmsg-for="@name" data-valmsg-replace="true"></span>
-                            </div>
-                            break;
-                    }
-                }
-            } *@
             <div class="form-group">
                 <input type="submit" value="Сохранить" class="btn btn-primary" />
             </div>

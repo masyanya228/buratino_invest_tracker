@@ -1,12 +1,10 @@
 ﻿@model CrudCreateDto
-
 @{
     ViewData["Title"] = "Создать " + @Model.EntityName;
 
     var type = Model.Entity.GetType();
     var propertyList = type.GetDefaultList().ToArray();
 }
-
 <h1>Создать @Model.EntityName</h1>
 <hr />
 <div class="row">

@@ -45,13 +45,5 @@ namespace Buratino.Models
         /// <param name="id"></param>
         /// <returns></returns>
         IActionResult Delete(Guid id);
-
-        /// <summary>
-        /// Удаляет сущность из репозитория
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="collection"></param>
-        /// <returns></returns>
-        IActionResult Delete(Guid id, IFormCollection collection);
     }
 }

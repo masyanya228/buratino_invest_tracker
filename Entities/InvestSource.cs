@@ -7,7 +7,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Buratino.Entities
 {
-    public class InvestSource : PersistentEntity
+    public class InvestSource : NamedEntity
     {
         public virtual IList<InvestPoint> Points { get; set; }
         public virtual IList<InvestCharge> Charges { get; set; }
@@ -19,28 +19,28 @@ namespace Buratino.Entities
         /// Эффективная годовая ставка
         /// </summary>
         [Display(Name = "Эффективная годовая ставка")]
-        [HidedProperty]
+        [HidenProperty]
         public virtual decimal EffectiveBase { get; set; }
 
         /// <summary>
         /// Дата расчета ставки
         /// </summary>
         [Display(Name = "Дата расчета ставки")]
-        [HidedProperty]
+        [HidenProperty]
         public virtual DateTime EffectiveBaseTimeStamp { get; set; }
 
         /// <summary>
         /// Последний баланс
         /// </summary>
         [Display(Name = "Последний баланс")]
-        [HidedProperty]
+        [HidenProperty]
         public virtual decimal LastBalance { get; set; }
 
         /// <summary>
         /// Всего инвестировано
         /// </summary>
         [Display(Name = "Всего инвестировано")]
-        [HidedProperty]
+        [HidenProperty]
         public virtual decimal TotalCharged { get; set; }
 
         /// <summary>
@@ -84,10 +84,5 @@ namespace Buratino.Entities
         /// </summary>
         [Display(Name = "Период выплат процентов")]
         public virtual PeriodType BVPeriodVyplat { get; set; } = PeriodType.Monthly;
-
-        public override string ToString()
-        {
-            return $"[{Id}]\t{Name}";
-        }
     }
 }

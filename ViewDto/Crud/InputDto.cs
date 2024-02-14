@@ -14,5 +14,10 @@
         public string DisplayName { get; set; }
         public object Value { get; set; }
         public bool IsEditable { get; set; }
+
+        public string GetHtmlDecimal()
+        {
+            return Value.ToString().Replace(".", ",");
+        }
     }
 }

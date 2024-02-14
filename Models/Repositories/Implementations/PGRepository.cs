@@ -28,7 +28,15 @@ namespace Buratino.Models.Repositories.Implementations
             {
                 using (var trans = session.BeginTransaction())
                 {
-                    session.Delete(entity);
+                    if (entity is PersistentEntity persistent)
+                    {
+                        persistent.IsDeleted = true;
+                        session.Update(entity);
+                    }
+                    else
+                    {
+                        session.Delete(entity);
+                    }
                     trans.Commit();
                     return true;
                 }

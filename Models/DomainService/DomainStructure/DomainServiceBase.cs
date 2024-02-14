@@ -9,14 +9,22 @@ namespace Buratino.Models.DomainService.DomainStructure
 {
     public abstract class DomainServiceBase<T> : IDomainService<T> where T : IEntityBase
     {
-        public IRepository<T> Repository { get; set; }
+        public virtual IRepository<T> Repository { get; set; }
 
         protected DomainServiceBase()
         {
+            Repository = Container.Resolve<IRepository<T>>("IEntity");
             DInject();
         }
 
         public T Save(T entity)
+        {
+            return entity.Id != Guid.Empty
+                ? Repository.Update(entity)
+                : Repository.Insert(entity);
+        }
+
+        public T CascadeSave(T entity)
         {
             foreach (var item in entity.GetType().GetProperties())
             {
@@ -32,9 +40,7 @@ namespace Buratino.Models.DomainService.DomainStructure
                     subDomain.InvokeMethod("Save", new object[] { value });
                 }
             }
-            return entity.Id != Guid.Empty
-                ? Repository.Update(entity)
-                : Repository.Insert(entity);
+            return Save(entity);
         }
 
         public bool Delete(T entity)
@@ -47,12 +53,12 @@ namespace Buratino.Models.DomainService.DomainStructure
             return Repository.Get(id);
         }
 
-        public IQueryable<T> GetAll()
+        public virtual IQueryable<T> GetAll()
         {
             return Repository.GetAll();
         }
 
-        private void DInject()
+        protected void DInject()
         {
             if (!Container.IsReady)
                 throw new ArgumentNullException("Платформа еще не запустилась. Этот метод можно вызывать после окончания конфигурации платформы.");

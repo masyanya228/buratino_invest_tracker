@@ -2,7 +2,7 @@
 
 namespace Buratino.Entities.Abstractions
 {
-    public abstract class NamedEntity : EntityBase
+    public abstract class NamedEntity : PersistentEntity
     {
         [Display(Name = "Наименование")]
         public virtual string Name { get; set; }

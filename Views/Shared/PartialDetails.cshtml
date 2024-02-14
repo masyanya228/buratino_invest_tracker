@@ -87,18 +87,21 @@
         switch (propType.Name)
         {
             case "Boolean":
-                @await Html.PartialAsync("/Views/Inputs/InputBool.cshtml", new InputDto(name,displayName, value,prop.CanWrite))
+                @await Html.PartialAsync("/Views/Inputs/InputBool.cshtml", new InputDto(name,displayName, value, prop.CanWrite))
                 break;
             case "DateTime":
-                @await Html.PartialAsync("/Views/Inputs/InputDateTime.cshtml", new InputDto(name,displayName, value,prop.CanWrite))
+                @await Html.PartialAsync("/Views/Inputs/InputDateTime.cshtml", new InputDto(name,displayName, value, prop.CanWrite))
                 break;
             case "Int16":
             case "Int32":
             case "Int64":
-                @await Html.PartialAsync("/Views/Inputs/InputNumber.cshtml", new InputDto(name,displayName, value,prop.CanWrite))
+                @await Html.PartialAsync("/Views/Inputs/InputNumber.cshtml", new InputDto(name,displayName, value, prop.CanWrite))
+                break;
+            case "Decimal":
+                @await Html.PartialAsync("/Views/Inputs/InputMoney.cshtml", new InputDto(name,displayName, value, prop.CanWrite))
                 break;
             default:
-                @await Html.PartialAsync("/Views/Inputs/InputString.cshtml", new InputDto(name,displayName, value,prop.CanWrite))
+                @await Html.PartialAsync("/Views/Inputs/InputString.cshtml", new InputDto(name,displayName, value, prop.CanWrite))
                 break;
         }
     }

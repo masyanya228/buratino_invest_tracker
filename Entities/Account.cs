@@ -19,6 +19,10 @@ namespace Buratino.Entities
         [RegularExpression(@"^([а-яА-Яё-]{2,24})$", ErrorMessage = "Фамилия может состоять только из русский букв")]
         public virtual string Surname { get; set; }
 
+        [TitleDescribe("Имя", "")]
+        [RegularExpression(@"^([а-яА-Яё-]{2,24})$", ErrorMessage = "Имя может состоять только из русский букв")]
+        public virtual string Name { get; set; }
+
         [TitleDescribe("Отчество", "")]
         [RegularExpression(@"^([а-яА-Яё-]{2,24})$", ErrorMessage = "Отчество может состоять только из русский букв")]
         public virtual string LastName { get; set; }

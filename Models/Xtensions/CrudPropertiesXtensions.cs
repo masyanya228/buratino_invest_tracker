@@ -13,7 +13,7 @@ namespace Buratino.Models.Xtensions
             return entityType.GetProperties()
                 .Where(x => x.CanWrite)
                 .Where(x => x.Name.ToLower() != "id")
-                .Where(x => x.GetAttribute<HidedPropertyAttribute>() == null)
+                .Where(x => x.GetAttribute<HidenPropertyAttribute>() == null)
                 .ToArray();
         }
 

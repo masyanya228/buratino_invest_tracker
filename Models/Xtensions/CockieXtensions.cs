@@ -22,7 +22,7 @@ namespace Buratino.Models.Xtensions
                     {
                         if (account is null)
                         {
-                            account = Container.Resolve<IDomainService<Account>>();
+                            account = Container.ResolveDomainService<Account>();
                         }
                     }
                 }

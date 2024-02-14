@@ -2,7 +2,7 @@
 {
 
     [AttributeUsage(AttributeTargets.Property, Inherited = true, AllowMultiple = false)]
-    sealed class HidedPropertyAttribute : Attribute
+    sealed class HidenPropertyAttribute : Attribute
     {
 
     }

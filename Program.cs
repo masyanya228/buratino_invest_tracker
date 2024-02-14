@@ -1,5 +1,4 @@
 using Buratino.Models.DomainService.DomainStructure;
-using Buratino;
 
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -23,8 +22,11 @@ internal class Program
         // Add services to the container.
         builder.Services.AddControllersWithViews();
 
-        builder.Services.AddSingleton(typeof(IRepository<>), typeof(PGRepository<>));
-        builder.Services.AddSingleton(typeof(IDomainService<>), typeof(DefaultDomainService<>));
+        builder.Services.AddKeyedSingleton(typeof(IRepository<>), "IEntity", typeof(PGRepository<>));
+        builder.Services.AddKeyedSingleton(typeof(IRepository<>), "PersistentEntity", typeof(PGPersistentRepository<>));
+
+        builder.Services.AddKeyedSingleton(typeof(IDomainService<>), "IEntity", typeof(DefaultDomainService<>));
+        builder.Services.AddKeyedSingleton(typeof(IDomainService<>), "PersistentEntity", typeof(PersistentDomainService<>));
         
         //for PG
         builder.Services.AddSingleton(typeof(IPGSessionFactory), typeof(PGSessionFactory));
@@ -85,6 +87,12 @@ internal class Program
 
     public static void OnStarted()
     {
+        var acc = Container.Resolve<IRepository<InvestSource>>("IEntity").GetAll().ToArray();
+        var acc2 = Container.Resolve<IRepository<InvestSource>>("PersistentEntity").GetAll().ToArray();
+
+        var ds1 = Container.ResolveDomainService<InvestSource>("IEntity").GetAll().ToArray();
+        var ds2 = Container.ResolveDomainService<InvestSource>("PersistentEntity").GetAll().ToArray();
+
         var accounts = Container.ResolveDomainService<Account>();
         if (!accounts.GetAll().Any(x => x.Email == "admin"))
         {
@@ -99,7 +107,7 @@ internal class Program
         }
 
 
-        Container.ResolveDomainService<RoleAccountLink>().Save(new RoleAccountLink()
+        Container.ResolveDomainService<RoleAccountLink>().CascadeSave(new RoleAccountLink()
         {
             Account = accounts.GetAll().First(),
             Role = new Role()

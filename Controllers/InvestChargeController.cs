@@ -4,12 +4,11 @@ using Buratino.ViewDto.Crud;
 
 namespace Buratino.Controllers
 {
-    public class InvestSourceController : EntityController<InvestSource>
+    public class InvestChargeController : EntityController<InvestCharge>
     {
-
         protected override IEnumerable<ColumnSettings> GetColumnSettings()
         {
-            return typeof(InvestSource).GetPropertyList("Name", "ProfitType", "SourceGroup").Select(x => new ColumnSettings(x));
+            return typeof(InvestCharge).GetPropertyList("Source", "Increment", "Description").Select(x => new ColumnSettings(x));
         }
     }
 }

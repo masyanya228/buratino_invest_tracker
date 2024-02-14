@@ -7,7 +7,7 @@ namespace Buratino.Entities.Abstractions
     public abstract class EntityBase : IEntityBase
     {
         [BsonId()]
-        [HidedProperty]
+        [HidenProperty]
         public virtual Guid Id { get; set; } = Guid.Empty;
 
         public override bool Equals(object obj)

@@ -2,7 +2,7 @@
 
 namespace Buratino.Entities
 {
-    public class Role : PersistentEntity
+    public class Role : NamedEntity
     {
 
     }

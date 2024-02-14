@@ -5,7 +5,7 @@ namespace Buratino.Entities
     /// <summary>
     /// Группа инвестиций
     /// </summary>
-    public class SourceGroup : PersistentEntity
+    public class SourceGroup : NamedEntity
     {
 
     }

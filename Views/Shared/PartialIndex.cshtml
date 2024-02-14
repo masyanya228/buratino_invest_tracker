@@ -1,19 +1,46 @@
 ﻿@model CrudListDto
-
 @{
     var type = Model.EntityType;
-    var propertyList = type.GetProperties().ToArray();
 }
+<style>
+    .thWight {
+        overflow: hidden;
+        word-break: break-word;
+    }
+    .tdWight {
+        white-space: nowrap;
+        overflow: hidden;
+        word-break: normal;
+    }
+    .tdWightSelected {
+        overflow: hidden;
+        word-break: normal;
+    }
+</style>
+<colgroup>
+    @foreach (var col in Model.ColumnSettings)
+    {
+        if (col.WidthPercent != default(double))
+        {
+            <col span="1" style="width:@(col.WidthPercent)%" />
+        }
+        else if (col.WidthPx != default(int))
+        {
+            <col span="1" style="width:@(col.WidthPx)px" />
+        }
+        else
+        {
+            <col span="1"/>
+        }
+    }
+    <col span="1" style="width:120px">
+</colgroup>
 <thead>
     <tr>
-        @for (int i = 0; i < propertyList.Length; i++)
+        @foreach (var col in Model.ColumnSettings)
         {
-            <th>
-                @{
-                    var display = propertyList[i].GetAttribute<DisplayAttribute>();
-                    var displayName = display?.Name ?? propertyList[i].Name;
-                }
-                @displayName
+            <th class="thWight">
+                @col.Name
             </th>
         }
         <th></th>
@@ -23,23 +50,28 @@
     @foreach (var item in Model.EntityList)
     {
         <tr>
-            @for (int i = 0; i < propertyList.Length; i++)
+            @foreach (var col in Model.ColumnSettings)
             {
-            <th>
-                @{
-                    var value = propertyList[i].GetValue(item);
-                }
-                @if (propertyList[i].PropertyType == typeof(bool))
-                {
-                    <input disabled type="checkbox" @((bool)value ? "checked" : "")>
-                }
-                else
-                {
-                    @value
-                }
-            </th>
+                <td class="tdWight">
+                    @{
+                        var value = col.GetValue(item);
+                    }
+                    @if (col.PropertyType == typeof(bool))
+                    {
+                        <input disabled type="checkbox" @((bool)value ? "checked" : "")>
+                    }
+                    else if (col.PropertyType.IsEnum)
+                    {
+                        var enumDisplayName = ((Enum)value).GetAttribute<DisplayAttribute>()?.Name ?? item.ToString();
+                        @enumDisplayName
+                    }
+                    else
+                    {
+                        @value
+                    }
+                </td>
             }
-            <td>
+            <td class="tdWight">
                 @Html.ActionLink("Edit", "Edit", new { id = item.Id }) |
                 @Html.ActionLink("Delete", "Delete", new { id = item.Id })
             </td>

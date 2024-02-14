@@ -1,22 +1,21 @@
-﻿using Buratino.Entities;
-using Buratino.Models.Attributes;
+﻿using Buratino.Models.Attributes;
 
 using System.ComponentModel.DataAnnotations;
 
 namespace Buratino.Entities.Abstractions
 {
-    public abstract class PersistentEntity : NamedEntity
+    public abstract class PersistentEntity : EntityBase
     {
         [Display(Name = "Удален")]
-        [HidedProperty]
+        [HidenProperty]
         public virtual bool IsDeleted { get; set; }
 
         [Display(Name = "Дата создания")]
-        [HidedProperty]
+        [HidenProperty]
         public virtual DateTime TimeStamp { get; set; } = DateTime.Now;
 
         [Display(Name = "Автор")]
-        [HidedProperty]
+        [HidenProperty]
         public virtual Account Account { get; set; }
     }
 }

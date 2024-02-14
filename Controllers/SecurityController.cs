@@ -1,5 +1,4 @@
-﻿using Buratino.Models.DomainService.DomainStructure;
-using Buratino.Models.Xtensions;
+﻿using Buratino.Models.Xtensions;
 
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;

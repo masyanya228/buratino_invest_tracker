@@ -11,5 +11,7 @@ namespace Buratino.Models.DomainService.DomainStructure
         IQueryable<T> GetAll();
 
         T Save(T entity);
+
+        T CascadeSave(T entity);
     }
 }

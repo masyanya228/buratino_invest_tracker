@@ -1,9 +1,7 @@
 ﻿using Buratino.Entities.Abstractions;
 using Buratino.Models.DomainService;
 using Buratino.Models.DomainService.DomainStructure;
-
-
-using System;
+using Buratino.Models.Xtensions;
 
 namespace Buratino.DI
 {
@@ -40,25 +38,55 @@ namespace Buratino.DI
             return _serviceProvider;
         }
 
-        public static object Resolve(Type type)
+        public static T Resolve<T>(string key = null)
         {
-            return _serviceProvider.GetService(type);
-        }
-        
-        public static T Resolve<T>()
-        {
-            return _serviceProvider.GetService<T>();
+            if (key is null)
+                return _serviceProvider.GetService<T>();
+            else
+                return _serviceProvider.GetKeyedService<T>(key);
         }
 
-        public static IDomainService<T> ResolveDomainService<T>() where T : IEntityBase
+        public static object Resolve(Type type, string key = null)
         {
-            return Resolve<IDomainService<T>>();
+            if (key is null)
+                return _serviceProvider.GetService(type);
+            else
+                return _serviceProvider.GetKeyedServices(type, key).First();
         }
 
-        public static object ResolveDomainService(Type type)
+        public static IDomainService<T> ResolveDomainService<T>(string key = null) where T : IEntityBase
+        {
+            if (key is null)
+            {
+                if (typeof(T).IsImplementationOfClass(typeof(PersistentEntity)))
+                {
+                    return Resolve<IDomainService<T>>("PersistentEntity");
+                }
+                else
+                {
+                    return Resolve<IDomainService<T>>("IEntity");
+                }
+            }
+            else
+            {
+                return Resolve<IDomainService<T>>(key);
+            }
+        }
+
+        public static object ResolveDomainService(Type type, string key = null)
         {
             var genericType = typeof(IDomainService<>).MakeGenericType(type);
-            return Resolve(genericType);
+            if (key is null)
+            {
+                if (type.IsImplementationOfClass(typeof(PersistentEntity)))
+                    return Resolve(genericType, "PersistentEntity");
+                else
+                    return Resolve(genericType, "IEntity");
+            }
+            else
+            {
+                return Resolve(genericType, key);
+            }
         }
 
         public static ObjectDomainService ResolveObjectDomainService(Type type)

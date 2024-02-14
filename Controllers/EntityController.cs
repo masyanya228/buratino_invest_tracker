@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Buratino.Controllers
 {
-    public class EntityController<T> : AutorityController, IEntityController<T> where T : EntityBase
+    public class EntityController<T> : AutorityController, IEntityController<T> where T : IEntityBase
     {
         protected IDomainService<T> DomainService { get; set; }
 
@@ -25,9 +25,15 @@ namespace Buratino.Controllers
             return View("List", new CrudListDto()
             {
                 EntityType = typeof(T),
-                EntityList = entityList,
+                EntityList = entityList as IEnumerable<IEntityBase>,
                 ListName = typeof(T).Name,
+                ColumnSettings = GetColumnSettings()
             });
+        }
+
+        protected virtual IEnumerable<ColumnSettings> GetColumnSettings()
+        {
+            return typeof(T).GetDefaultList().Select(x => new ColumnSettings(x));
         }
 
         // GET: EntityController/Create
@@ -76,7 +82,11 @@ namespace Buratino.Controllers
             var entity = DomainService.Get(id);
             CreateOrEditEntity(entity, collection);
             DomainService.Save(entity);
-            return View();
+            return View("Edit", new CrudEditDto()
+            {
+                Entity = entity,
+                EntityName = typeof(T).Name,
+            });
         }
 
         // GET: EntityController/Delete/5
@@ -84,15 +94,7 @@ namespace Buratino.Controllers
         {
             var entity = DomainService.Get(id);
             DomainService.Delete(entity);
-            return Redirect("List");
-        }
-
-        // POST: EntityController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public virtual IActionResult Delete(Guid id, IFormCollection collection)
-        {
-            return Redirect("List");
+            return RedirectToAction("Index");
         }
 
         protected virtual T CreateOrEditEntity(T entity, IFormCollection collection)
