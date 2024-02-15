@@ -10,6 +10,37 @@ namespace Buratino.Entities.Abstractions
         [HidenProperty]
         public virtual Guid Id { get; set; } = Guid.Empty;
 
+
+        public static bool operator == (EntityBase f1, EntityBase f2)
+        {
+            if (f1 is null && f2 is null)
+            {
+                return true;
+            }
+
+            if (f1 is null)
+            {
+                return false;
+            }
+
+            return f1.Equals(f2);
+        }
+
+        public static bool operator != (EntityBase f1, EntityBase f2)
+        {
+            if (f1 is null && f2 is null)
+            {
+                return true;
+            }
+
+            if (f1 is null)
+            {
+                return false;
+            }
+
+            return !f1.Equals(f2);
+        }
+
         public override bool Equals(object obj)
         {
             if (obj is IEntityBase entity)

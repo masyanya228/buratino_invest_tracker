@@ -106,6 +106,17 @@ internal class Program
             accounts.Save(entity);
         }
 
+        //Переопределение сравнения сущностей в управляемом коде
+        var exist = accounts.GetAll().First();
+        var newacc = new Account()
+        {
+            Id = exist.Id
+        };
+        if (exist == newacc)
+        {
+
+        }
+
 
         Container.ResolveDomainService<RoleAccountLink>().CascadeSave(new RoleAccountLink()
         {
