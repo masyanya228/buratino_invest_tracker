@@ -3,30 +3,36 @@ using Buratino.Models.Helpers;
 
 using LiteDB;
 
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+
 using System.Reflection;
 
 namespace Buratino.Models.Xtensions
 {
     public static class SPDXtensions
     {
-        public static object StringValueCast(this string source, Type type)
+        public static object StringValueCast(this string str, Type target)
         {
-            if (type is null)
+            if (str is null || str.ToString() == "")
             {
-                throw new ArgumentNullException(nameof(type));
+                return null;
             }
 
-            if (type.Name == "Nullable`1")
+            if (target.Name == "Nullable`1")
             {
-                type = type.GenericTypeArguments.FirstOrDefault();
-                if (source == null)
+                target = target.GenericTypeArguments.FirstOrDefault();
+                if (str == null)
                     return null;
             }
 
-            if (type.IsAssignableTo(typeof(EntityBase)))
+            if (target == typeof(string))
             {
-                var entity = Activator.CreateInstance(type) as EntityBase;
-                if (Guid.TryParse(source, out Guid entityId))
+                return str;
+            }
+            else if (target.IsAssignableTo(typeof(EntityBase)))
+            {
+                var entity = Activator.CreateInstance(target) as EntityBase;
+                if (Guid.TryParse(str, out Guid entityId))
                 {
                     entity.Id = entityId;
                 }
@@ -36,51 +42,38 @@ namespace Buratino.Models.Xtensions
                 }
                 return entity;
             }
-            else if (type.IsEnum)
+            else if (target.IsEnum)
             {
-                if (Enum.TryParse(type, source, out object res))
+                if (Enum.TryParse(target, str, out object res))
                 {
                     return res;
                 }
                 else
                 {
-                    return Activator.CreateInstance(type);
+                    return Activator.CreateInstance(target);
                 }
             }
             else
             {
-                if (type == typeof(string))
+                var enumerable = target.GetMethods(BindingFlags.Public | BindingFlags.Static).Where(x => x.Name == "TryParse").ToArray();
+                var method = enumerable.First();
+
+                if (target == typeof(decimal) || target == typeof(float) || target == typeof(double))
                 {
-                    return source;
+                    str = str.Replace(".", ",");
                 }
-                else if (type == typeof(int))
+
+                var data = new object[] { str, null };
+                var res = (bool)method.Invoke(null, data);
+                if (res)
                 {
-                    if (int.TryParse(source, out int res))
-                        return res;
+                    return data[1];
                 }
-                else if (type == typeof(long))
+                else
                 {
-                    if (long.TryParse(source, out long res))
-                        return res;
-                }
-                else if (type == typeof(decimal))
-                {
-                    if (decimal.TryParse(source, out decimal res))
-                        return res;
-                }
-                else if (type == typeof(double))
-                {
-                    if (double.TryParse(source, out double res))
-                        return res;
-                }
-                
-                else if (type == typeof(DateTime))
-                {
-                    if (DateTime.TryParse(source, out DateTime res))
-                        return res;
+                    throw new Exception($"Не удалось преобразовать {str} в {target}");
                 }
             }
-            return null;
         }
 
         public static object Cast(this object obj, Type target)
@@ -134,33 +127,16 @@ namespace Buratino.Models.Xtensions
             }
             else if (source == typeof(string))
             {
-                if (obj is null || obj.ToString() == "")
-                {
-                    return null;
-                }
-
-                var enumerable = target.GetMethods(BindingFlags.Public | BindingFlags.Static).Where(x => x.Name == "TryParse").ToArray();
-                var method = enumerable.First();
-                var data = new object[] { obj, null };
-                var res = (bool)enumerable[0].Invoke(null, data);
-                if (res)
-                {
-                    return data[1];
-                }
-                else
-                {
-                    throw new Exception($"Не удалось преобразовать {obj} в {target}");
-                }
+                return obj.ToString().StringValueCast(target);
             }
             else
             {
-                var resolve = Convertation.Convertations.FirstOrDefault(x => x.A == source && x.B == target);
-                if (resolve == null)
+                var converter = Convertation.Convertations.FirstOrDefault(x => x.A == source && x.B == target);
+                if (converter == null)
                     throw new Exception($"Нет преобразования для {source} в {target} ({obj?.ToString() ?? "|e|"})");
                 else
                 {
-                    object res = resolve.GetResult(obj);
-                    return res;
+                    return converter.GetResult(obj);
                 }
             }
         }
