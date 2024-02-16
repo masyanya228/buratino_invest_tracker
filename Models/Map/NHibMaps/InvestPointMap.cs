@@ -8,6 +8,7 @@ public class InvestPointMap : NHSubclassClassMap<InvestPoint>
         Map(x => x.Amount);
         Map(x => x.Description);
 
-        References(x => x.Source, "InvestSourceId");
+        References(x => x.Source, "InvestSourceId")
+            .Not.LazyLoad();
     }
 }

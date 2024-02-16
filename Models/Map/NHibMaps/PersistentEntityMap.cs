@@ -8,6 +8,7 @@ public class PersistentEntityMap : NHSubclassClassMap<PersistentEntity>
         Abstract();
         Map(x => x.TimeStamp);
         Map(x => x.IsDeleted);
-        References(x => x.Account, "AccountId");
+        References(x => x.Account, "AccountId")
+            .Not.LazyLoad();
     }
 }

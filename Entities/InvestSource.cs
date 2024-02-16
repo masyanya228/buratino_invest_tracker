@@ -10,7 +10,10 @@ namespace Buratino.Entities
     public class InvestSource : NamedEntity
     {
         public virtual IList<InvestPoint> Points { get; set; }
+
         public virtual IList<InvestCharge> Charges { get; set; }
+
+        public virtual IList<InvestComment> Comments { get; set; }
 
         [Display(Name = "Описание инвестиции")]
         public virtual string Description { get; set; }

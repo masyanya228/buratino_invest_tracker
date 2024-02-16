@@ -5,8 +5,12 @@ public class RoleAccountLinkNHMap : NHSubclassClassMap<RoleAccountLink>
 {
     public RoleAccountLinkNHMap()
     {
-        References(item => item.Role, "RoleId");
-        References(item => item.Account, "AccountId");
+        References(item => item.Role, "RoleId")
+            .Not.LazyLoad();
+        
+        References(item => item.Account, "AccountId")
+            .Not.LazyLoad();
+
         Table("RoleAccountLinks");
     }
 }

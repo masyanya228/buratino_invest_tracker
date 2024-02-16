@@ -17,9 +17,18 @@ public class InvestSourceMap : NHSubclassClassMap<InvestSource>
         Map(x => x.BVEndStamp);
         Map(x => x.BVPeriodVyplat);
 
-        References(x => x.SourceGroup, "SourceGroupId");
+        References(x => x.SourceGroup, "SourceGroupId")
+            .Not.LazyLoad();
 
-        HasMany(x => x.Points);
+        HasMany(x => x.Points)
+            .Not.LazyLoad();
+
+        HasMany(x => x.Charges)
+            .Not.LazyLoad();
+
+        HasMany(x => x.Comments)
+            .Not.LazyLoad();
+
         Table("InvestSources");
     }
 }

@@ -39,7 +39,8 @@ namespace Buratino.Repositories.Implementations.Postgres
                             .Database("postgres")
                             .Username("postgres")
                             .Password("007007Qq"))
-                        .Dialect<PostgreSQL82Dialect>().ShowSql());
+                        .Dialect<PostgreSQL82Dialect>()
+                        .ShowSql());
 
             foreach (var item in mappings)
             {
