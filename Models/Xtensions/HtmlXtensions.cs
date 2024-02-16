@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace PowerManager.Xtensions
+﻿namespace Buratino.Models.Xtensions
 {
     public static class HtmlXtensions
     {
