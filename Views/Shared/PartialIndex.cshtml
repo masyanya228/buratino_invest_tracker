@@ -60,6 +60,10 @@
                     {
                         <input disabled type="checkbox" @((bool)value ? "checked" : "")>
                     }
+                    else if (col.PropertyType == typeof(decimal))
+                    {
+                        @(((decimal)value).Round())
+                    }
                     else if (col.PropertyType.IsEnum)
                     {
                         var enumDisplayName = ((Enum)value).GetAttribute<DisplayAttribute>()?.Name ?? item.ToString();

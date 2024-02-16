@@ -134,6 +134,16 @@ namespace Buratino.Models.Xtensions
             return Math.Round(number, count);
         }
 
+        public static int Round(this decimal number)
+        {
+            return (int)Math.Round(number, 0);
+        }
+
+        public static decimal Round(this decimal number, int count)
+        {
+            return Math.Round(number, count);
+        }
+
         static string alphabet = "0123456789QWERTYUIOPASDFGHJKLZXCVBNM";
         static Random ran = new Random();
         public static string GetRandom(this int length, bool DigitOnly = false)
