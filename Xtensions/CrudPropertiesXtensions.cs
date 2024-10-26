@@ -1,10 +1,9 @@
 ﻿using Buratino.Models.Attributes;
-
 using LiteDB;
 
 using System.Reflection;
 
-namespace Buratino.Models.Xtensions
+namespace Buratino.Xtensions
 {
     public static class CrudPropertiesXtensions
     {

@@ -1,12 +1,12 @@
 ﻿using Buratino.DI;
 using Buratino.Entities;
+using Buratino.Models;
 using Buratino.Models.DomainService.DomainStructure;
-
 using LiteDB;
 
 using Microsoft.AspNetCore.Mvc;
 
-namespace Buratino.Models.Xtensions
+namespace Buratino.Xtensions
 {
     public static class CockieXtensions
     {
@@ -22,7 +22,7 @@ namespace Buratino.Models.Xtensions
                     {
                         if (account is null)
                         {
-                            account = Container.ResolveDomainService<Account>();
+                            account = Container.GetDomainService<Account>();
                         }
                     }
                 }
@@ -47,7 +47,7 @@ namespace Buratino.Models.Xtensions
         {
             if (accId == Guid.Empty)
                 return null;
-            var acc = Container.ResolveDomainService<Account>().Get(accId);
+            var acc = Container.GetDomainService<Account>().Get(accId);
             return acc;
         }
         public static Account GetOperator(HttpContext httpContext)
@@ -95,14 +95,14 @@ namespace Buratino.Models.Xtensions
                 clientQuene = new ClientQuene()
                 {
                     Accaunt = curAcc,
-                    Session = DataXtensions.GetRandom(16)
+                    Session = 16.GetRandom()
                 };
                 ClientQuenes.Add(clientQuene);
             }
             else
             {
                 clientQuene.Accaunt = curAcc;
-                clientQuene.Session = DataXtensions.GetRandom(16);
+                clientQuene.Session = 16.GetRandom();
             }
 
             controller.Response.Cookies.Append(

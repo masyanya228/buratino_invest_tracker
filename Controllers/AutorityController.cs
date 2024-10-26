@@ -32,9 +32,9 @@ namespace Buratino.Controllers
 
         public AutorityController()
         {
-            AccountDomainService = Container.ResolveDomainService<Account>();
-            Roles = Container.ResolveDomainService<Role>();
-            RAL = Container.ResolveDomainService<RoleAccountLink>();
+            AccountDomainService = Container.GetDomainService<Account>();
+            Roles = Container.GetDomainService<Role>();
+            RAL = Container.GetDomainService<RoleAccountLink>();
         }
 
         /// <summary>

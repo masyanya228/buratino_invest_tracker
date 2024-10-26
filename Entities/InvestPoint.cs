@@ -1,18 +1,21 @@
 ﻿using Buratino.Entities.Abstractions;
 
-using System.ComponentModel.DataAnnotations;
-
 namespace Buratino.Entities
 {
-    public class InvestPoint : PersistentEntity
+    public class InvestPoint : EntityBase
     {
-        [Display(Name = "Инвест. поток")]
         public virtual InvestSource Source { get; set; }
 
-        [Display(Name = "Баланс")]
+        /// <summary>
+        /// Баланс
+        /// </summary>
         public virtual decimal Amount { get; set; }
 
-        [Display(Name = "Заметка")]
         public virtual string Description { get; set; }
+
+        public override string ToString()
+        {
+            return $"[{Id}]\t{Amount}\t({Source})";
+        }
     }
 }

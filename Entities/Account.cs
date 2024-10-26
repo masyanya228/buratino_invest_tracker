@@ -1,13 +1,12 @@
 ﻿using BCrypt.Net;
 using Buratino.Entities.Abstractions;
 using Buratino.Models.Attributes;
-using Buratino.Models.Xtensions;
-
+using Buratino.Xtensions;
 using System.ComponentModel.DataAnnotations;
 
 namespace Buratino.Entities
 {
-    public class Account : GeoLoc
+    public class Account : PersistentEntity
     {
         [TitleDescribe("Почта", "")]
         public virtual string Email { get; set; }

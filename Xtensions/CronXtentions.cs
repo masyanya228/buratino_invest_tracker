@@ -3,7 +3,7 @@ using Buratino.DI;
 using Buratino.Jobs.Structures;
 using Buratino.Models.Jobs.Structures;
 
-namespace Buratino.Models.Xtensions
+namespace Buratino.Xtensions
 {
     public static class CronXtentions
     {
@@ -16,7 +16,7 @@ namespace Buratino.Models.Xtensions
                 .WithCronSchedule(job.CroneTime)
                 .Build();
 
-            return Container.Resolve<IQuartzProvider>().Schedule.ScheduleJob(jobDetail, trigger).GetAwaiter().GetResult();
+            return Container.Get<IQuartzProvider>().Schedule.ScheduleJob(jobDetail, trigger).GetAwaiter().GetResult();
         }
     }
 }

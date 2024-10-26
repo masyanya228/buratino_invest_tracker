@@ -7,7 +7,9 @@ using LiteDB;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
 
-namespace Buratino.Models.Xtensions
+using Buratino.Xtensions;
+
+namespace Buratino.Xtensions
 {
     public static class DataXtensions
     {
@@ -100,7 +102,7 @@ namespace Buratino.Models.Xtensions
         public static string DateTimeAgo(this DateTime date, bool onlyTimeAgo = false)
         {
             var period = DateTime.Now.Subtract(date);
-            var timeAgo = PeriodToHuman(period);
+            var timeAgo = period.PeriodToHuman();
             if (onlyTimeAgo)
             {
                 return timeAgo;
@@ -226,7 +228,7 @@ namespace Buratino.Models.Xtensions
         }
         public static bool Between<TSource>(this TSource val, TSource min, TSource max) where TSource : IComparable
         {
-            return (val.CompareTo(min) >= 0 && val.CompareTo(max) <= 0);
+            return val.CompareTo(min) >= 0 && val.CompareTo(max) <= 0;
         }
         public static bool Between_LTE_GTE<TSource>(this TSource val, TSource min, TSource max) where TSource : IComparable
         {
@@ -361,7 +363,7 @@ namespace Buratino.Models.Xtensions
         }
         public static string AddTrueWord(this int A, params string[] words)
         {
-            return A + " " + TrueWord(A, words);
+            return A + " " + A.TrueWord(words);
         }
         public static string TrueWord(this int A, params string[] words)
         {
@@ -506,7 +508,7 @@ namespace Buratino.Models.Xtensions
         }
         public static string TimeToShortHuman(this double days)
         {
-            var res = days > 1 ? ((int)Math.Floor(days) + "д") : ((int)(days * 24) + "Ч");
+            var res = days > 1 ? (int)Math.Floor(days) + "д" : (int)(days * 24) + "Ч";
             return res;
         }
         public static int GetImportant(this double days)
@@ -611,7 +613,7 @@ namespace Buratino.Models.Xtensions
             }
             catch (Exception ex)
             {
-                return default(T);
+                return default;
             }
         }
 
@@ -873,7 +875,7 @@ namespace Buratino.Models.Xtensions
 
         public static string ToInputDate(this DateTime dateTime)
         {
-            return String.Format("{0:yyyy/MM/dd}", dateTime).Replace(".", "-");
+            return string.Format("{0:yyyy/MM/dd}", dateTime).Replace(".", "-");
         }
         public static double AverageSafe<T>(this IEnumerable<T> arr, Func<T, double> func, double emptyRes = 0)
         {
@@ -890,7 +892,7 @@ namespace Buratino.Models.Xtensions
                 return dic[key];
             else
             {
-                T value = default(T);
+                T value = default;
                 dic.Add(key, value);
                 return value;
             }

@@ -1,4 +1,4 @@
-﻿namespace Buratino.Models.Helpers
+﻿namespace Buratino.Helpers
 {
     public class Convertation
     {
@@ -23,7 +23,7 @@
             Convertations.Add(new Convertation(typeof(decimal), typeof(double), x => (double)(decimal)x));
             Convertations.Add(new Convertation(typeof(float), typeof(double), x => (double)(float)x));
             Convertations.Add(new Convertation(typeof(bool), typeof(double), x => true == (bool)x ? 1.0 : 0.0));
-            Convertations.Add(new Convertation(typeof(DateTime), typeof(double), x => (double)((DateTime)x).ToOADate()));
+            Convertations.Add(new Convertation(typeof(DateTime), typeof(double), x => ((DateTime)x).ToOADate()));
 
             Convertations.Add(new Convertation(typeof(double), typeof(int), x => (int)(double)x));
             Convertations.Add(new Convertation(typeof(decimal), typeof(int), x => (int)(decimal)x));
@@ -43,10 +43,10 @@
             Convertations.Add(new Convertation(typeof(bool), typeof(float), x => true == (bool)x ? 1f : 0f));
             Convertations.Add(new Convertation(typeof(DateTime), typeof(float), x => ((DateTime)x).ToOADate()));
 
-            Convertations.Add(new Convertation(typeof(double), typeof(bool), x => ((double)x == 1.0) ? 1.0 : 0.0));
-            Convertations.Add(new Convertation(typeof(decimal), typeof(bool), x => ((decimal)x == 1.0m) ? 1.0m : 0.0m));
-            Convertations.Add(new Convertation(typeof(int), typeof(bool), x => ((int)x == 1) ? 1 : 0));
-            Convertations.Add(new Convertation(typeof(float), typeof(bool), x => ((float)x == 1f) ? 1f : 0f));
+            Convertations.Add(new Convertation(typeof(double), typeof(bool), x => (double)x == 1.0 ? 1.0 : 0.0));
+            Convertations.Add(new Convertation(typeof(decimal), typeof(bool), x => (decimal)x == 1.0m ? 1.0m : 0.0m));
+            Convertations.Add(new Convertation(typeof(int), typeof(bool), x => (int)x == 1 ? 1 : 0));
+            Convertations.Add(new Convertation(typeof(float), typeof(bool), x => (float)x == 1f ? 1f : 0f));
             Convertations.Add(new Convertation(typeof(DateTime), typeof(bool), x =>
             {
                 var dow = ((DateTime)x).DayOfWeek;

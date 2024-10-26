@@ -12,6 +12,9 @@ using Buratino.Models.Map.Implementations;
 using Buratino.Models.Repositories.Implementations.Postgres;
 using Buratino.Entities;
 using Buratino.Repositories.Implementations.Postgres;
+using Buratino.Models.Services;
+using Buratino.API;
+using Buratino.Models.Repositories;
 
 internal class Program
 {
@@ -25,14 +28,22 @@ internal class Program
         builder.Services.AddKeyedSingleton(typeof(IRepository<>), "IEntity", typeof(PGRepository<>));
         builder.Services.AddKeyedSingleton(typeof(IRepository<>), "PersistentEntity", typeof(PGPersistentRepository<>));
 
-        builder.Services.AddKeyedSingleton(typeof(IDomainService<>), "IEntity", typeof(DefaultDomainService<>));
-        builder.Services.AddKeyedSingleton(typeof(IDomainService<>), "PersistentEntity", typeof(PersistentDomainService<>));
+        builder.Services.AddSingleton(typeof(IDomainService<>), typeof(DefaultDomainService<>));
         
         //for PG
         builder.Services.AddSingleton(typeof(IPGSessionFactory), typeof(PGSessionFactory));
         
         //for LiteDB
         builder.Services.AddSingleton(typeof(IMap<>), typeof(LiteDBMap<>));
+
+        builder.Services.AddSingleton(typeof(InvestCalcService));
+        builder.Services.AddSingleton(typeof(InvestIncomeService));
+        builder.Services.AddSingleton(typeof(TInvestService));
+
+        builder.Services.AddSingleton(typeof(IDomainService<InvestSource>), typeof(InvestSourceService));
+        builder.Services.AddSingleton(typeof(IDomainService<InvestCharge>), typeof(InvestChargeService));
+        builder.Services.AddSingleton(typeof(IDomainService<InvestPoint>), typeof(InvestPointService));
+
 
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
             .AddCookie(options =>
@@ -81,19 +92,22 @@ internal class Program
             RequestPath = "/Images"
         });
 
+        new MigrateData();
+
         app.Lifetime.ApplicationStarted.Register(OnStarted);
         app.Run();
     }
 
     public static void OnStarted()
     {
-        var acc = Container.Resolve<IRepository<InvestSource>>("IEntity").GetAll().ToArray();
-        var acc2 = Container.Resolve<IRepository<InvestSource>>("PersistentEntity").GetAll().ToArray();
+        new TGAPI().Start("7230300926:AAHenYludkc2ga1kuqhPZHGClQRlqlLXxjU");
 
-        var ds1 = Container.ResolveDomainService<InvestSource>("IEntity").GetAll().ToArray();
-        var ds2 = Container.ResolveDomainService<InvestSource>("PersistentEntity").GetAll().ToArray();
+        var acc = Container.Get<IRepository<InvestSource>>("IEntity").GetAll().ToArray();
+        var acc2 = Container.Get<IRepository<InvestSource>>("PersistentEntity").GetAll().ToArray();
 
-        var accounts = Container.ResolveDomainService<Account>();
+        var ds2 = Container.GetDomainService<InvestSource>().GetAll().ToArray();
+
+        var accounts = Container.GetDomainService<Account>();
         if (!accounts.GetAll().Any(x => x.Email == "admin"))
         {
             Account entity = new Account()
@@ -118,7 +132,7 @@ internal class Program
         }
 
 
-        Container.ResolveDomainService<RoleAccountLink>().CascadeSave(new RoleAccountLink()
+        Container.GetDomainService<RoleAccountLink>().CascadeSave(new RoleAccountLink()
         {
             Account = accounts.GetAll().First(),
             Role = new Role()
@@ -127,6 +141,6 @@ internal class Program
             }
         });
 
-        var list = Container.ResolveDomainService<RoleAccountLink>().GetAll();
+        var list = Container.GetDomainService<RoleAccountLink>().GetAll();
     }
 }

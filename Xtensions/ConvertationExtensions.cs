@@ -1,4 +1,4 @@
-﻿namespace Buratino.Models.Xtensions
+﻿namespace Buratino.Xtensions
 {
     public static class ConvertationExtensions
     {

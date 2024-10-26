@@ -1,6 +1,6 @@
 ﻿using Buratino.Entities;
-using Buratino.Models.Xtensions;
 using Buratino.ViewDto.Crud;
+using Buratino.Xtensions;
 
 namespace Buratino.Controllers
 {

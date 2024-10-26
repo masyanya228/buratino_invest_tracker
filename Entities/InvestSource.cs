@@ -1,91 +1,114 @@
 ﻿using Buratino.Entities.Abstractions;
 using Buratino.Enums;
-using Buratino.Models.Attributes;
-using Buratino.Models.Enums;
+using Buratino.Services;
 
-using System.ComponentModel.DataAnnotations;
+using LiteDB;
 
 namespace Buratino.Entities
 {
-    public class InvestSource : NamedEntity
+    public class InvestSource : PersistentEntity
     {
-        public virtual IList<InvestPoint> Points { get; set; }
+        public virtual string Name { get; set; }
 
-        public virtual IList<InvestCharge> Charges { get; set; }
-
-        public virtual IList<InvestComment> Comments { get; set; }
-
-        [Display(Name = "Описание инвестиции")]
         public virtual string Description { get; set; }
 
         /// <summary>
         /// Эффективная годовая ставка
         /// </summary>
-        [Display(Name = "Эффективная годовая ставка")]
-        [HidenProperty]
         public virtual decimal EffectiveBase { get; set; }
 
         /// <summary>
         /// Дата расчета ставки
         /// </summary>
-        [Display(Name = "Дата расчета ставки")]
-        [HidenProperty]
         public virtual DateTime EffectiveBaseTimeStamp { get; set; }
 
         /// <summary>
         /// Последний баланс
         /// </summary>
-        [Display(Name = "Последний баланс")]
-        [HidenProperty]
         public virtual decimal LastBalance { get; set; }
 
         /// <summary>
         /// Всего инвестировано
         /// </summary>
-        [Display(Name = "Всего инвестировано")]
-        [HidenProperty]
         public virtual decimal TotalCharged { get; set; }
 
         /// <summary>
         /// Тип дохода
         /// </summary>
-        [Display(Name = "Тип дохода")]
-        public virtual ProfitType ProfitType { get; set; }
-
-        /// <summary>
-        /// Группа инвестиций
-        /// </summary>
-        [Display(Name = "Группа инвестиций")]
-        public virtual SourceGroup SourceGroup { get; set; }
+        public virtual ProfitType ProfitType { get; set; } = ProfitType.WithIncome;
 
         /// <summary>
         /// Бансковский вклад
         /// </summary>
-        [Display(Name = "Банковски вклад")]
         public virtual bool IsBankVklad { get; set; }
-
+        
         /// <summary>
-        /// Срок вклада
+        /// Срок закрытия вклада
         /// </summary>
-        [Display(Name = "Срок вклада")]
         public virtual DateTime BVEndStamp { get; set; }
 
         /// <summary>
         /// Процентная ставка (годовых)
         /// </summary>
-        [Display(Name = "Процентная ставка")]
         public virtual decimal BVPS { get; set; }
 
         /// <summary>
         /// Капитализация процентов
         /// </summary>
-        [Display(Name = "Капитализация процентов")]
         public virtual bool BVCapitalisation { get; set; }
 
         /// <summary>
         /// Период выплат процентов 
         /// </summary>
-        [Display(Name = "Период выплат процентов")]
-        public virtual PeriodType BVPeriodVyplat { get; set; } = PeriodType.Monthly;
+        public virtual PeriodType BVPeriodVyplat { get; set; }
+
+        /// <summary>
+        /// Поток закрыт
+        /// </summary>
+        public virtual bool IsClosed { get; set; }
+
+        /// <summary>
+        /// Всего получено на выходе
+        /// </summary>
+        public virtual decimal TotalRecharged { get; set; }
+
+        /// <summary>
+        /// Дата закрытия вклада
+        /// </summary>
+        public virtual DateTime CloseDate { get; set; }
+
+        /// <summary>
+        /// Id аккаунта т инвестиций
+        /// </summary>
+        public virtual long TInvestAccountId { get; set; }
+
+        /// <summary>
+        /// Категория капитала
+        /// </summary>
+        public virtual CategoryEnum Category { get; set; }
+
+        [BsonIgnore]
+        public virtual IEnumerable<InvestPoint> Points { get; set; }
+
+        [BsonIgnore]
+        public virtual IEnumerable<InvestCharge> Charges { get; set; }
+        
+        [BsonIgnore]
+        public virtual IEnumerable<InvestBenifit> Benifits { get; set; }
+
+        [BsonIgnore]
+        public virtual IEnumerable<InvestComment> Comments { get; set; }
+
+        public override string ToString()
+        {
+            return $"[{Id}\t{Name}]";
+        }
+
+        public virtual string PrintList()
+        {
+            return this.IsBankVklad
+                ? $"{Name} - {LastBalance:C} {Math.Round(EffectiveBase, 1)}% ({Math.Round(BVEndStamp.Subtract(DateTime.Now).TotalDays / 30.5, 1)})"
+                : $"{Name} - {LastBalance:C} {Math.Round(EffectiveBase, 1)}%";
+        }
     }
 }

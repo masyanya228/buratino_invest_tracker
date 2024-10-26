@@ -3,7 +3,7 @@
 <div class="col-sm-5 col-md-5 col-lg-4 m-0">
     <div class="btn-group m-0" role="group" aria-label="Basic example" style="width:100%">
         @{
-            Account cl = Buratino.Models.Xtensions.CockieXtensions.GetOperator(this.Context);
+            Account cl = Buratino.Xtensions.CockieXtensions.GetOperator(this.Context);
             if (cl == null)
             {
                 <div class="modal fade" style="width:100%" id="modalLoginForm" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"

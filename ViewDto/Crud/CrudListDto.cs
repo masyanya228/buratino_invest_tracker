@@ -1,6 +1,6 @@
 ﻿using Buratino.Entities.Abstractions;
-using Buratino.Models.Xtensions;
 
+using Buratino.Xtensions;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 

@@ -1,7 +1,8 @@
 ﻿using Buratino.Entities.Abstractions;
 using Buratino.Models.DomainService;
 using Buratino.Models.DomainService.DomainStructure;
-using Buratino.Models.Xtensions;
+
+using Buratino.Xtensions;
 
 namespace Buratino.DI
 {
@@ -38,7 +39,7 @@ namespace Buratino.DI
             return _serviceProvider;
         }
 
-        public static T Resolve<T>(string key = null)
+        public static T Get<T>(string key = null)
         {
             if (key is null)
                 return _serviceProvider.GetService<T>();
@@ -46,7 +47,7 @@ namespace Buratino.DI
                 return _serviceProvider.GetKeyedService<T>(key);
         }
 
-        public static object Resolve(Type type, string key = null)
+        public static object Get(Type type, string key = null)
         {
             if (key is null)
                 return _serviceProvider.GetService(type);
@@ -54,44 +55,39 @@ namespace Buratino.DI
                 return _serviceProvider.GetKeyedServices(type, key).First();
         }
 
-        public static IDomainService<T> ResolveDomainService<T>(string key = null) where T : IEntityBase
+        public static IRepository<T> GetRepository<T>(string key = null) where T : IEntityBase
         {
             if (key is null)
             {
                 if (typeof(T).IsImplementationOfClass(typeof(PersistentEntity)))
                 {
-                    return Resolve<IDomainService<T>>("PersistentEntity");
+                    return Get<IRepository<T>>("PersistentEntity");
                 }
                 else
                 {
-                    return Resolve<IDomainService<T>>("IEntity");
+                    return Get<IRepository<T>>("IEntity");
                 }
             }
             else
             {
-                return Resolve<IDomainService<T>>(key);
+                return Get<IRepository<T>>(key);
             }
         }
 
-        public static object ResolveDomainService(Type type, string key = null)
+        public static IDomainService<T> GetDomainService<T>(string key = null) where T : IEntityBase
+        {
+            return Get<IDomainService<T>>(key);
+        }
+
+        public static object GetDomainService(Type type, string key = null)
         {
             var genericType = typeof(IDomainService<>).MakeGenericType(type);
-            if (key is null)
-            {
-                if (type.IsImplementationOfClass(typeof(PersistentEntity)))
-                    return Resolve(genericType, "PersistentEntity");
-                else
-                    return Resolve(genericType, "IEntity");
-            }
-            else
-            {
-                return Resolve(genericType, key);
-            }
+            return Get(genericType, key);
         }
 
-        public static ObjectDomainService ResolveObjectDomainService(Type type)
+        public static ObjectDomainService GetObjectDomainService(Type type)
         {
-            return new ObjectDomainService(ResolveDomainService(type));
+            return new ObjectDomainService(GetDomainService(type));
         }
     }
 }

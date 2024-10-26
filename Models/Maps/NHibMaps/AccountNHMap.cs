@@ -7,6 +7,5 @@ public class AccountNHMap : NHSubclassClassMap<Account>
     {
         Map(x => x.Email);
         Map(x => x.Pass);
-        Table("Accounts");
     }
 }

@@ -1,4 +1,4 @@
-﻿using Buratino.Models.Xtensions;
+﻿
 
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication;
@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 using System.Security.Claims;
 using Buratino.Entities;
+using Buratino.Xtensions;
 
 namespace Buratino.Controllers
 {
