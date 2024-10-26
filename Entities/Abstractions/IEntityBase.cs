@@ -1,9 +1,9 @@
-﻿using System;
-
+﻿
 namespace Buratino.Entities.Abstractions
 {
     public interface IEntityBase
     {
-        public Guid Id { get; set; }
+        Guid Id { get; set; }
+        DateTime TimeStamp { get; set; }
     }
 }

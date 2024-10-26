@@ -1,63 +1,34 @@
-﻿using Buratino.Models.Attributes;
-
-using LiteDB;
+﻿using LiteDB;
 
 namespace Buratino.Entities.Abstractions
 {
-    public abstract class EntityBase : IEntityBase
+    public abstract class EntityBase : IEquatable<EntityBase>, IEntityBase
     {
         [BsonId()]
-        [HidenProperty]
-        public virtual Guid Id { get; set; } = Guid.Empty;
+        public virtual Guid Id { get; set; }
 
+        public virtual DateTime TimeStamp { get; set; } = DateTime.Now;
 
-        public static bool operator == (EntityBase f1, EntityBase f2)
+        public virtual bool Equals(EntityBase other)
         {
-            if (f1 is null && f2 is null)
-            {
-                return true;
-            }
-
-            if (f1 is null)
-            {
-                return false;
-            }
-
-            return f1.Equals(f2);
-        }
-
-        public static bool operator != (EntityBase f1, EntityBase f2)
-        {
-            if (f1 is null && f2 is null)
-            {
-                return true;
-            }
-
-            if (f1 is null)
-            {
-                return false;
-            }
-
-            return !f1.Equals(f2);
+            return other.GetType() == GetType()
+                && other.Id == Id;
         }
 
         public override bool Equals(object obj)
         {
-            if (obj is IEntityBase entity)
+            if (obj is null)
+                return false;
+            if (obj is EntityBase invest)
             {
-                return Id == entity.Id;
+                return Equals(invest);
             }
-            return base.Equals(obj);
+            return false;
         }
 
         public override int GetHashCode()
         {
-            return -1;
-        }
-
-        public override string ToString()
-        {
-            return Id.ToString();
+            return Id.GetHashCode();
         }
     }
 }

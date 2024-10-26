@@ -1,6 +1,7 @@
 ﻿using Buratino.Models.DomainService;
 using System.Collections.Concurrent;
 using Buratino.Entities.Abstractions;
+using FluentNHibernate.Data;
 
 namespace Buratino.Models.Repositories.Implementations
 {
@@ -13,7 +14,9 @@ namespace Buratino.Models.Repositories.Implementations
             Collection = new ConcurrentDictionary<Guid, T>();
         }
 
-        public override bool Delete(T entity) => Collection.TryRemove(entity.Id, out _);
+        public override bool Delete(T entity) => Delete(entity.Id);
+
+        public override bool Delete(Guid id) => Collection.TryRemove(id, out _);
 
         public override T Get(Guid id) => Collection.TryGetValue(id, out T value)
             ? value

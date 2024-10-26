@@ -1,4 +1,5 @@
 ﻿using Buratino.Entities.Abstractions;
+using Buratino.LiteDBContext;
 using Buratino.Models.DomainService;
 
 using LiteDB;
@@ -12,13 +13,13 @@ namespace Buratino.Models.Repositories.Implementations
 
         public LiteRepository()
         {
-            Collection = DBContext.db.GetCollection<T>();
+            Collection = DBContext.Database.GetCollection<T>();
             Collection = IncludeAll(Collection);
         }
 
-        public override bool Delete(T entity)
+        public override IQueryable<T> GetAll()
         {
-            return Collection.Delete(entity.Id);
+            return Collection.AsQueryable();
         }
 
         public override T Get(Guid id)
@@ -27,11 +28,6 @@ namespace Buratino.Models.Repositories.Implementations
             if (entity == null)
                 throw new ArgumentException(nameof(id) + id);
             return entity;
-        }
-
-        public override IQueryable<T> GetAll()
-        {
-            return Collection.AsQueryable();
         }
 
         public override T Insert(T entity)
@@ -44,6 +40,16 @@ namespace Buratino.Models.Repositories.Implementations
         {
             Collection.Update(entity);
             return entity;
+        }
+
+        public override bool Delete(T entity)
+        {
+            return Delete(entity.Id);
+        }
+
+        public override bool Delete(Guid id)
+        {
+            return Collection.Delete(id);
         }
 
         protected ILiteCollection<T> IncludeAll(ILiteCollection<T> collection)

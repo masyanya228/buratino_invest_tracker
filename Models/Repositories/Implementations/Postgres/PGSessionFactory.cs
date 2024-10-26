@@ -2,11 +2,12 @@
 using FluentNHibernate.Cfg;
 using NHibernate.Tool.hbm2ddl;
 using NHibernate;
-using Buratino.Models.Xtensions;
+
 using NHibernate.Cfg;
 using Buratino.Models.Map.NHibMaps;
 using NHibernate.Dialect;
 using Buratino.Models.Repositories.Implementations.Postgres;
+using Buratino.Xtensions;
 
 namespace Buratino.Repositories.Implementations.Postgres
 {
@@ -35,7 +36,7 @@ namespace Buratino.Repositories.Implementations.Postgres
                         PostgreSQLConfiguration.Standard
                         .ConnectionString(c =>
                             c.Host("localhost")
-                            .Port(5432)
+                            .Port(5433)
                             .Database("postgres")
                             .Username("postgres")
                             .Password("007007Qq"))

@@ -2,9 +2,8 @@
 using Buratino.Entities.Abstractions;
 using Buratino.Models;
 using Buratino.Models.DomainService.DomainStructure;
-using Buratino.Models.Xtensions;
 using Buratino.ViewDto.Crud;
-
+using Buratino.Xtensions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Buratino.Controllers
@@ -15,7 +14,7 @@ namespace Buratino.Controllers
 
         public EntityController()
         {
-            DomainService = Container.ResolveDomainService<T>();
+            DomainService = Container.GetDomainService<T>();
         }
 
         // GET: EntityController

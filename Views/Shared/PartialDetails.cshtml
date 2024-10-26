@@ -27,7 +27,7 @@
     if (propType.IsAssignableTo(typeof(IEntityBase)))
     {
         var selectedValue = value as EntityBase;
-        var itemList = Container.ResolveObjectDomainService(propType).GetAllEntities();
+        var itemList = Container.GetObjectDomainService(propType).GetAllEntities();
         <div class="form-group">
             <label class="control-label" for="@name">@displayName</label>
             <select id="@name" name='@name' class="form-control">

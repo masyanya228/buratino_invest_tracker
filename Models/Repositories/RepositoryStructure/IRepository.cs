@@ -6,6 +6,6 @@
         IQueryable<T> GetAll();
         T Insert(T entity);
         T Update(T entity);
-        bool Delete(T entity);
+        bool Delete(Guid id);
     }
 }
