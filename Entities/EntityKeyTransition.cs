@@ -4,10 +4,10 @@ namespace Buratino.Entities
 {
     public class EntityKeyTransition : EntityBase
     {
-        public string EntityType { get; set; }
+        public virtual string EntityType { get; set; }
 
-        public long OldId { get; set; }
+        public virtual long OldId { get; set; }
 
-        public Guid NewId { get; set; }
+        public virtual Guid NewId { get; set; }
     }
 }
