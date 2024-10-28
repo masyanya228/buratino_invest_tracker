@@ -8,6 +8,8 @@ using Buratino.Models.Services;
 using Buratino.Services;
 using Buratino.Xtensions;
 
+using System.Linq;
+
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types;
@@ -27,6 +29,7 @@ namespace Buratino.API
         private InvestIncomeService IncomeService;
         private Dictionary<long, Guid> ChatSourcePointer;
         private Dictionary<long, TGActionType> ChatActionPointer;
+        private Dictionary<long, TInvestSourceUpdateInfoForAccept> ChatUpdateInfoPointer;
         public void Start(string token)
         {
             SourceService = Container.GetDomainService<InvestSource>() as InvestSourceService;
@@ -35,8 +38,10 @@ namespace Buratino.API
             BenifitService = Container.GetDomainService<InvestBenifit>();
             CalcService = Container.Get<InvestCalcService>();
             IncomeService = Container.Get<InvestIncomeService>();
-            ChatSourcePointer = new Dictionary<long, Guid>();
-            ChatActionPointer = new Dictionary<long, TGActionType>();
+
+            ChatSourcePointer = new();
+            ChatActionPointer = new();
+            ChatUpdateInfoPointer = new();
 
             client = new TelegramBotClient(token, new HttpClient());
             var me = client.GetMeAsync().GetAwaiter().GetResult();
@@ -210,16 +215,86 @@ namespace Buratino.API
                 }
                 else if (com == "update_info")
                 {
-                    var id = Guid.Parse(args[0]);
-                    var result = SourceService.Get(id);
-                    var newValue = new TInvestService().GetAccountValue(result.TInvestAccountId);
-
                     client.SendTextMessageAsync(chat, "Эта операция может занять пару минут.");
                     client.SendChatActionAsync(chat, ChatAction.Typing);
-                    Task.Factory.StartNew(() =>
+                    var id = Guid.Parse(args[0]);
+                    var source = SourceService.Get(id);
+
+                    var newValue = new TInvestService().GetAccountValue(source.TInvestAccountId);
+                    var chargeDiff = new TInvestService().GetHistoryDiff(source);
+
+                    ChatUpdateInfoPointer[chat] = new TInvestSourceUpdateInfoForAccept()
                     {
-                        client.SendTextMessageAsync(chat, $"{result.Name} оценивается в {newValue:C}");
-                        Com_Source(chat, id);
+                        SourceId = id,
+                        HistoryOpsDiff = chargeDiff,
+                        NewValue = newValue
+                    };
+
+                    var addedText = chargeDiff.Added.Any()
+                        ? "\r\n\r\nНовые операции:\r\n" + chargeDiff.Added.Select(x => $"{x.TimeStamp.ToShortDateString()}: {x.Increment:C}").Join("\r\n")
+                        : string.Empty;
+
+                    var editedText = chargeDiff.Edited.Any()
+                        ? "\r\n\r\nИзмененные операции:\r\n" + chargeDiff.Edited.Select(x => $"{x.TimeStamp.ToShortDateString()}: {x.Increment:C}").Join("\r\n")
+                        : string.Empty;
+
+                    var removedText = chargeDiff.Removed.Any()
+                        ? "\r\n\r\nУдаленные операции:\r\n" + chargeDiff.Removed.Select(x => $"{x.TimeStamp.ToShortDateString()}: {x.Increment:C}").Join("\r\n")
+                        : string.Empty;
+
+                    client.SendOrUpdateMessage(chat,
+                        $"{source.Name} оценивается в {newValue:C}" +
+                        $"{addedText}{editedText}{removedText}",
+                        0,
+                        new InlineKeyboardConstructor()
+                        .AddButtonDown("Применить изменения", $"/accept_changes/{id}")
+                        .GetMarkup());
+                    Com_Source(chat, id);
+                }
+                else if (com == "accept_changes")
+                {
+                    var id = Guid.Parse(args[0]);
+                    if (!ChatUpdateInfoPointer.TryGetValue(chat, out TInvestSourceUpdateInfoForAccept infoForAccept) && infoForAccept.SourceId == id)
+                    {
+                        throw new ArgumentException("Значение в кэше не соответствует намерению. Сделайте операцию заново.");
+                    }
+                    var source = SourceService.Get(id);
+                    infoForAccept.HistoryOpsDiff.Added.Select(x =>
+                        {
+                            return ChargeService.Save(new InvestCharge()
+                            {
+                                Source = source,
+                                Increment = x.Increment,
+                                TimeStamp = x.TimeStamp,
+                            });
+                        })
+                        .ToArray();
+
+
+                    var charges = ChargeService.GetAll().Where(x => x.Source.Id == id).ToArray();
+                    infoForAccept.HistoryOpsDiff.Removed.SelectMany(x =>
+                        {
+                            return charges.Where(y => y.TimeStamp.Date == x.TimeStamp.Date)
+                                .Select(y =>
+                                {
+                                    ChargeService.Delete(y.Id);
+                                    return y.Id;
+                                });
+                        })
+                        .ToArray();
+
+                    infoForAccept.HistoryOpsDiff.Edited.Select(x =>
+                        {
+                            var exist = charges.SingleOrDefault(y => y.TimeStamp.Date == x.TimeStamp.Date);
+                            exist.Increment = x.Increment;
+                            return ChargeService.Save(exist);
+                        })
+                        .ToArray();
+
+                    PointService.Save(new InvestPoint()
+                    {
+                        Source = source,
+                        Amount = infoForAccept.NewValue,
                     });
                 }
                 else if (com == "history")

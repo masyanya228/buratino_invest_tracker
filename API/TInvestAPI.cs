@@ -69,5 +69,32 @@ namespace Buratino.API
             var obj = JsonConvert.DeserializeObject<Etf>(resp.Content);
             return obj;
         }
+
+        public OperationHistory GetOperations(string accountId, string instrumentUid = null)
+        {
+            var url = "https://invest-public-api.tinkoff.ru/rest/tinkoff.public.invest.api.contract.v1.OperationsService/GetOperationsByCursor";
+            RestClient restClient = new RestClient(url);
+            RestRequest restRequest = new RestRequest(url, Method.Post);
+            restRequest.AddHeader("Authorization", "Bearer t.tMh7y3HUV6e_Fa6XIQtT2EGRoBOgd1YdMpzVULODY_1K9XG7Br6GUDdphYIeOUdigJyUHHBkwuLyhRSMGPLnBA");
+            restRequest.AddBody(new
+            {
+                accountId,
+                instrumentId = instrumentUid,
+                limit = 1000,
+                operationTypes = new string[]
+                {
+                    "OPERATION_TYPE_INPUT",
+                    "OPERATION_TYPE_OUTPUT",
+                    "OPERATION_TYPE_DIV_EXT",
+                    "OPERATION_TYPE_OUTPUT_ACQUIRING",
+                    "OPERATION_TYPE_INPUT_ACQUIRING",
+                    "OPERATION_TYPE_OUT_MULTI",
+                    "OPERATION_TYPE_INP_MULTI",
+                }
+            });
+            var resp = restClient.Execute(restRequest);
+            var obj = JsonConvert.DeserializeObject<OperationHistory>(resp.Content);
+            return obj;
+        }
     }
 }
