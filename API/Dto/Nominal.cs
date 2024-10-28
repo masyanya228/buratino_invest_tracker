@@ -18,7 +18,7 @@ namespace Buratino.API.Dto
             if (Currency == "rub")
                 return Units;
             if (Currency == "usd")
-                return Units * 96.09m;
+                return Units * 97.29m;
             throw new ArgumentOutOfRangeException();
         }
     }
