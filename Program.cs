@@ -14,7 +14,6 @@ using Buratino.Entities;
 using Buratino.Repositories.Implementations.Postgres;
 using Buratino.Models.Services;
 using Buratino.API;
-using Buratino.Models.Repositories;
 
 internal class Program
 {

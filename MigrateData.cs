@@ -1,6 +1,7 @@
 ﻿using Buratino.DI;
 using Buratino.Entities;
 using Buratino.Models.DomainService;
+using Buratino.Services;
 
 using LiteDB;
 
@@ -16,7 +17,7 @@ public class MigrateData
 
     private void MigrateNewData()
     {
-        /*InvestSource
+/*InvestSource
 InvestCharge
 InvestPoint
 InvestBenifit
@@ -25,12 +26,69 @@ CategoryOfCapital*/
         var oldDB = new LiteDatabase("D:\\source2\\Buratino_InvestTracker\\bin\\Debug\\net6.0\\DB1");
         oldDB.Mapper.EnumAsInteger = true;
 
-        
-
         //source
         TransitSources(oldDB);
         TransitCharges(oldDB);
         TransitPoints(oldDB);
+        TransitBenefits(oldDB);
+    }
+
+    private void TransitBenefits(LiteDatabase oldDB)
+    {
+        var source = oldDB.GetCollection("InvestBenifit", BsonAutoId.Int64);
+        var entityRep = Container.GetRepository<InvestBenifit>();
+        var items = source.FindAll();
+        var entityType = typeof(InvestBenifit);
+        foreach (var item in items)
+        {
+            var trans = new EntityKeyTransition()
+            {
+                EntityType = entityType.Name,
+                OldId = item["_id"].AsInt64
+            };
+            var exist = TransRep.GetAll()
+                .Where(x => x.EntityType == trans.EntityType && x.OldId == trans.OldId)
+                .SingleOrDefault();
+            if (exist == null)
+            {
+                TransRep.Insert(trans);
+            }
+            else
+            {
+                exist.TimeStamp = DateTime.Now;
+                TransRep.Update(exist);
+                continue;
+            }
+
+            var newBenifit = new InvestBenifit();
+            foreach (var field in item.GetElements())
+            {
+                if (field.Key == "_id")
+                    continue;
+
+                if (field.Key == "Source")
+                {
+                    var oldRefId = field.Value["$id"].AsInt64;
+                    newBenifit.Source = new InvestSource() { Id = GetNewId("InvestSource", oldRefId) };
+                    continue;
+                }
+                entityType
+                    .GetProperty(field.Key, BindingFlags.Public | BindingFlags.Instance)
+                    .SetValue(newBenifit, field.Value.RawValue);
+            }
+
+            if (exist == null)
+            {
+                entityRep.Insert(newBenifit);
+                trans.NewId = newBenifit.Id;
+                TransRep.Update(trans);
+            }
+            else
+            {
+                newBenifit.Id = exist.NewId;
+                entityRep.Update(newBenifit);
+            }
+        }
     }
 
     private void TransitPoints(LiteDatabase oldDB)
@@ -112,6 +170,7 @@ CategoryOfCapital*/
             {
                 exist.TimeStamp = DateTime.Now;
                 TransRep.Update(exist);
+                continue;
             }
 
             var newSource = new InvestSource();
