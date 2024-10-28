@@ -592,7 +592,7 @@ namespace Buratino.API
             var result = SourceService.Get(id);
             client.SendOrUpdateMessage(chat,
                 $"{result.Name} - Отметка" +
-                $"\r\nПоследний баланс: {result.LastBalance}" +
+                $"\r\nПоследний баланс: {result.LastBalance:C}" +
                 $"\r\nОтправьте сообщение в следующем формате:\r\n" +
                 $"\r\n1000 (текущий баланс)" +
                 $"\r\n{DateTime.Now.AddDays(-3).ToShortDateString()} (если отметка сегодняшняя, можно пропустить)",
