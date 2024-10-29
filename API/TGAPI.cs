@@ -1,4 +1,5 @@
 ﻿using Buratino.API.Dto;
+using Buratino.Attributes;
 using Buratino.DI;
 using Buratino.Entities;
 using Buratino.Enums;
@@ -8,7 +9,7 @@ using Buratino.Models.Services;
 using Buratino.Services;
 using Buratino.Xtensions;
 
-using System.Linq;
+using System.Reflection;
 
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
@@ -157,17 +158,15 @@ namespace Buratino.API
                 }
 
                 var com = ParseCommand(text, out string[] args);
-                if (com == "start" || com == "menu")
+                var availablePointers = this.GetMethodsWithAttribute<TGPointerAttribute>();
+                var method = availablePointers.SingleOrDefault(x => x.Value.Pointers.Contains(com));
+                if (method.Key is not null)
                 {
-                    Com_Menu(chat);
+                    InvokeCommand(method, chat, 0, args);
                 }
-                else if (com == "sources")
+                else
                 {
-                    Com_Sources(chat);
-                }
-                else if (com == "plans")
-                {
-                    Com_Plans(chat);
+                    throw new Exception("Не поддерживаемая команда");
                 }
             }
             else if (update.Type == UpdateType.CallbackQuery)
@@ -177,314 +176,299 @@ namespace Buratino.API
                 var messageId = update.CallbackQuery.Message.MessageId;
                 client.AnswerCallbackQueryAsync(update.CallbackQuery.Id);
 
-                if (com == "menu")
+                var availablePointers = this.GetMethodsWithAttribute<TGPointerAttribute>();
+                var method = availablePointers.SingleOrDefault(x => x.Value.Pointers.Contains(com));
+                if (method.Key is not null)
                 {
-                    Com_Menu(chat, messageId);
+                    InvokeCommand(method, chat, messageId, args);
                 }
-                else if (com == "sources")
+                else
                 {
-                    Com_Sources(chat, messageId);
-                }
-                else if (com == "plans")
-                {
-                    Com_Plans(chat, messageId);
-                }
-                else if (com == "source")
-                {
-                    var id = Guid.Parse(args[0]);
-                    Com_Source(chat, id, messageId);
-                }
-                else if (com == "to_charge")
-                {
-                    var id = Guid.Parse(args[0]);
-                    Com_To_Charge(chat, id, messageId);
-                }
-                else if (com == "to_source")
-                {
-                    Com_To_Source(chat, messageId);
-                }
-                else if (com == "to_point")
-                {
-                    var id = Guid.Parse(args[0]);
-                    Com_To_Point(chat, id, messageId);
-                }
-                else if (com == "to_benefit")
-                {
-                    var id = Guid.Parse(args[0]);
-                    Com_To_Benifit(chat, id, messageId);
-                }
-                else if (com == "update_info")
-                {
-                    client.SendTextMessageAsync(chat, "Эта операция может занять пару минут.");
-                    client.SendChatActionAsync(chat, ChatAction.Typing);
-                    var id = Guid.Parse(args[0]);
-                    var source = SourceService.Get(id);
-
-                    var newValue = new TInvestService().GetAccountValue(source.TInvestAccountId);
-                    var chargeDiff = new TInvestService().GetHistoryDiff(source);
-
-                    ChatUpdateInfoPointer[chat] = new TInvestSourceUpdateInfoForAccept()
-                    {
-                        SourceId = id,
-                        HistoryOpsDiff = chargeDiff,
-                        NewValue = newValue
-                    };
-
-                    var addedText = chargeDiff.Added.Any()
-                        ? "\r\n\r\nНовые операции:\r\n" + chargeDiff.Added.Select(x => $"{x.TimeStamp.ToShortDateString()}: {x.Increment:C}").Join("\r\n")
-                        : string.Empty;
-
-                    var editedText = chargeDiff.Edited.Any()
-                        ? "\r\n\r\nИзмененные операции:\r\n" + chargeDiff.Edited.Select(x => $"{x.TimeStamp.ToShortDateString()}: {x.Increment:C}").Join("\r\n")
-                        : string.Empty;
-
-                    var removedText = chargeDiff.Removed.Any()
-                        ? "\r\n\r\nУдаленные операции:\r\n" + chargeDiff.Removed.Select(x => $"{x.TimeStamp.ToShortDateString()}: {x.Increment:C}").Join("\r\n")
-                        : string.Empty;
-
-                    client.SendOrUpdateMessage(chat,
-                        $"{source.Name} оценивается в {newValue:C}" +
-                        $"{addedText}{editedText}{removedText}",
-                        0,
-                        new InlineKeyboardConstructor()
-                        .AddButtonDown("Применить изменения", $"/accept_changes/{id}")
-                        .GetMarkup());
-                    Com_Source(chat, id);
-                }
-                else if (com == "accept_changes")
-                {
-                    var id = Guid.Parse(args[0]);
-                    if (!ChatUpdateInfoPointer.TryGetValue(chat, out TInvestSourceUpdateInfoForAccept infoForAccept) && infoForAccept.SourceId == id)
-                    {
-                        throw new ArgumentException("Значение в кэше не соответствует намерению. Сделайте операцию заново.");
-                    }
-                    var source = SourceService.Get(id);
-                    infoForAccept.HistoryOpsDiff.Added.Select(x =>
-                        {
-                            return ChargeService.Save(new InvestCharge()
-                            {
-                                Source = source,
-                                Increment = x.Increment,
-                                TimeStamp = x.TimeStamp,
-                            });
-                        })
-                        .ToArray();
-
-
-                    var charges = ChargeService.GetAll().Where(x => x.Source.Id == id).ToArray();
-                    infoForAccept.HistoryOpsDiff.Removed.SelectMany(x =>
-                        {
-                            return charges.Where(y => y.TimeStamp.Date == x.TimeStamp.Date)
-                                .Select(y =>
-                                {
-                                    ChargeService.Delete(y.Id);
-                                    return y.Id;
-                                });
-                        })
-                        .ToArray();
-
-                    infoForAccept.HistoryOpsDiff.Edited.Select(x =>
-                        {
-                            var exist = charges.SingleOrDefault(y => y.TimeStamp.Date == x.TimeStamp.Date);
-                            exist.Increment = x.Increment;
-                            return ChargeService.Save(exist);
-                        })
-                        .ToArray();
-
-                    PointService.Save(new InvestPoint()
-                    {
-                        Source = source,
-                        Amount = infoForAccept.NewValue,
-                    });
-                }
-                else if (com == "history")
-                {
-                    var id = Guid.Parse(args[0]);
-                    Com_History(chat, id, messageId);
-                }
-                else if (com == "view_charge")
-                {
-                    var id = Guid.Parse(args[0]);
-                    var result = ChargeService.Get(id);
-
-                    client.SendOrUpdateMessage(chat,
-                        $"Пополнение {result.TimeStamp.ToShortDateString()}" +
-                        $"\r\n{result.Increment}",
-                        messageId,
-                        new InlineKeyboardConstructor()
-                            .AddButtonDown("Удалить", $"/try_delete_charge/{id}")
-                            .AddButtonDown("Назад", $"/source/{result.Source.Id}")
-                            .GetMarkup());
-                }
-                else if (com == "try_delete_charge")
-                {
-                    var id = Guid.Parse(args[0]);
-                    var result = ChargeService.Get(id);
-
-                    client.SendOrUpdateMessage(chat,
-                        $"Удаление пополнения {result.TimeStamp.ToShortDateString()}" +
-                        $"\r\n{result.Increment}" +
-                        $"\r\n\r\nДействительно удалить?!",
-                        messageId,
-                        new InlineKeyboardConstructor()
-                            .AddButtonDown("🚫Удалить🚫", $"/delete_charge/{id}")
-                            .AddButtonDown("Назад", $"/history/{result.Source.Id}")
-                            .GetMarkup());
-                }
-                else if (com == "delete_charge")
-                {
-                    var id = Guid.Parse(args[0]);
-                    var result = ChargeService.Get(id);
-                    ChargeService.Delete(id);
-                    Com_History(chat, result.Source.Id, messageId);
-                }
-                else if (com == "view_point")
-                {
-                    var id = Guid.Parse(args[0]);
-                    var result = PointService.Get(id);
-
-                    client.SendOrUpdateMessage(chat,
-                        $"Отметка {result.TimeStamp.ToShortDateString()}" +
-                        $"\r\n{result.Amount}",
-                        messageId,
-                        new InlineKeyboardConstructor()
-                            .AddButtonDown("Удалить", $"/try_delete_point/{id}")
-                            .AddButtonDown("Назад", $"/source/{result.Source.Id}")
-                            .GetMarkup());
-                }
-                else if (com == "try_delete_point")
-                {
-                    var id = Guid.Parse(args[0]);
-                    var result = PointService.Get(id);
-
-                    client.SendOrUpdateMessage(chat,
-                        $"Удаление отметки {result.TimeStamp.ToShortDateString()}" +
-                        $"\r\n{result.Amount}" +
-                        $"\r\n\r\nДействительно удалить?!",
-                        messageId,
-                        new InlineKeyboardConstructor()
-                            .AddButtonDown("🚫Удалить🚫", $"/delete_point/{id}")
-                            .AddButtonDown("Назад", $"/history/{result.Source.Id}")
-                            .GetMarkup());
-                }
-                else if (com == "delete_point")
-                {
-                    var id = Guid.Parse(args[0]);
-                    var result = PointService.Get(id);
-                    PointService.Delete(id);
-                    Com_History(chat, result.Source.Id, messageId);
-                }
-                else if (com == "view_benifit")
-                {
-                    var id = Guid.Parse(args[0]);
-                    var result = BenifitService.Get(id);
-
-                    client.SendOrUpdateMessage(chat,
-                        $"Пополнение {result.TimeStamp.ToShortDateString()}" +
-                        $"\r\n{result.Value}",
-                        messageId,
-                        new InlineKeyboardConstructor()
-                            .AddButtonDown("Удалить", $"/try_delete_benifit/{id}")
-                            .AddButtonDown("Назад", $"/source/{result.Source.Id}")
-                            .GetMarkup());
-                }
-                else if (com == "try_delete_benifit")
-                {
-                    var id = Guid.Parse(args[0]);
-                    var result = BenifitService.Get(id);
-
-                    client.SendOrUpdateMessage(chat,
-                        $"Удаление пополнения {result.TimeStamp.ToShortDateString()}" +
-                        $"\r\n{result.Value}" +
-                        $"\r\n\r\nДействительно удалить?!",
-                        messageId,
-                        new InlineKeyboardConstructor()
-                            .AddButtonDown("🚫Удалить🚫", $"/delete_benifit/{id}")
-                            .AddButtonDown("Назад", $"/history/{result.Source.Id}")
-                            .GetMarkup());
-                }
-                else if (com == "delete_benifit")
-                {
-                    var id = Guid.Parse(args[0]);
-                    var result = BenifitService.Get(id);
-                    BenifitService.Delete(id);
-                    Com_History(chat, result.Source.Id, messageId);
-                }
-                else if (com == "set_category")
-                {
-                    var id = Guid.Parse(args[0]);
-                    var category = Enum.Parse<CategoryEnum>(args[1]);
-                    var result = SourceService.Get(id);
-                    result.Category = category;
-                    SourceService.Save(result);
-
-                    if (result.Category == CategoryEnum.Deposit)
-                    {
-                        Com_To_EnterVkladInfo(chat, id, messageId);
-                    }
-                    else if (result.Category == CategoryEnum.TInvestAuto)
-                    {
-                        Com_To_EnterTInvestInfo(chat, id, messageId);
-                    }
-                    else
-                    {
-                        Com_Source(chat, id, messageId);
-                    }
-                }
-                else if (com == "fact_income")
-                {
-                    var id = Guid.Parse(args[0]);
-                    var result = SourceService.Get(id);
-                    var totalCharged = ChargeService.GetAll().Where(x => x.Source.Id == id).Sum(x => x.Increment);
-                    var lastPoint = PointService.GetAll()
-                        .Where(x => x.Source.Id == id)
-                        .OrderByDescending(x => x.TimeStamp)
-                        .FirstOrDefault()?.Amount ?? 0;
-
-                    var incomesTotal = IncomeService.GetIncomeByAllTime(result);
-                    var incomes = IncomeService.GetIncomeByLastMonths(result, 6);
-                    client.SendOrUpdateMessage(chat, $"{result.Name}" +
-                        $"\r\nДоходы за всё время: {incomesTotal.Sum():C}" +
-                        $"\r\nПроверка: {lastPoint - totalCharged:C}" +
-                        $"\r\n\r\n{string.Join("\r\n", incomes.Select((x, i) => $"{i + 1}) {x:C}"))}",
-                        messageId,
-                        new InlineKeyboardConstructor()
-                            .AddButtonDown("Назад", $"/source/{id}")
-                            .GetMarkup());
-                }
-                else if (com == "fact_income_all")
-                {
-                    IEnumerable<InvestSource> activeSources = SourceService.GetAll().Where(x => !x.IsClosed);
-                    var lastPoint = activeSources.Sum(x => x.LastBalance);
-                    var totalCharged = activeSources
-                        .SelectMany(x => ChargeService.GetAll().Where(y => y.Source.Id == x.Id))
-                        .Sum(x => x.Increment);
-
-                    var incomesTotal = IncomeService.CalcIncomeAll();
-                    client.SendOrUpdateMessage(chat, $"Фактические доходы по всем источникам" +
-                        $"\r\nДоходы за всё время: {incomesTotal.SelectMany(x => x.Value).Sum():C}" +
-                        $"\r\nПроверка (вход выход): {lastPoint - totalCharged:C}" +
-                        $"\r\n\r\n{string.Join("\r\n", incomesTotal.ToSumList().Select((x, i) => $"{i + 1}) {x:C}"))}",
-                        messageId,
-                        new InlineKeyboardConstructor()
-                            .AddButtonDown("Назад", $"/menu")
-                            .GetMarkup());
-                }
-                else if (com == "get_capital_categories")
-                {
-                    var categories = CalcService.GetCapitalCategories()
-                        .GroupBy(x => x.CategoryOfCapitalEnum)
-                        .Select(x => new KeyValuePair<CategoryEnum, decimal>(x.Key, x.Sum(x => x.Value)))
-                        .ToArray();
-                    client.SendOrUpdateMessage(chat, $"Распределение капитала по категориям ивестиционных инструментов" +
-                        $"\r\n{string.Join("\r\n", categories.OrderByDescending(x => x.Value).Select(x => $"{x.Key} {x.Value:C}"))}",
-                        messageId,
-                        new InlineKeyboardConstructor()
-                            .AddButtonDown("Назад", $"/menu")
-                            .GetMarkup());
+                    throw new Exception("Не поддерживаемая команда");
                 }
             }
             return Task.CompletedTask;
+        }
+
+        [TGPointer("get_capital_categories")]
+        private void Com_Get_Capital_Categories(long chat, int messageId)
+        {
+            var categories = CalcService.GetCapitalCategories()
+                                    .GroupBy(x => x.CategoryOfCapitalEnum)
+                                    .Select(x => new KeyValuePair<CategoryEnum, decimal>(x.Key, x.Sum(x => x.Value)))
+                                    .ToArray();
+            client.SendOrUpdateMessage(chat, $"Распределение капитала по категориям ивестиционных инструментов" +
+                $"\r\n{string.Join("\r\n", categories.OrderByDescending(x => x.Value).Select(x => $"{x.Key} {x.Value:C}"))}",
+                messageId,
+                new InlineKeyboardConstructor()
+                    .AddButtonDown("Назад", $"/menu")
+                    .GetMarkup());
+        }
+
+        [TGPointer("fact_income_all")]
+        private void Com_Fact_Income_All(long chat, int messageId)
+        {
+            IEnumerable<InvestSource> activeSources = SourceService.GetAll().Where(x => !x.IsClosed);
+            var lastPoint = activeSources.Sum(x => x.LastBalance);
+            var totalCharged = activeSources
+                .SelectMany(x => ChargeService.GetAll().Where(y => y.Source.Id == x.Id))
+                .Sum(x => x.Increment);
+
+            var incomesTotal = IncomeService.GetAllIncomeByAllTime();
+            client.SendOrUpdateMessage(chat, $"Фактические доходы по всем источникам" +
+                $"\r\nДоходы за всё время: {incomesTotal.SelectMany(x => x.Value).Sum():C}" +
+                $"\r\nПроверка (вход выход): {lastPoint - totalCharged:C}" +
+                $"\r\n\r\n{string.Join("\r\n", incomesTotal.ToSumList().Select((x, i) => $"{i + 1}) {x:C}"))}",
+                messageId,
+                new InlineKeyboardConstructor()
+                    .AddButtonDown("Назад", $"/menu")
+                    .GetMarkup());
+        }
+
+        [TGPointer("fact_income")]
+        private void Com_Fact_Income(long chat, int messageId, Guid id)
+        {
+            var result = SourceService.Get(id);
+            var totalCharged = ChargeService.GetAll().Where(x => x.Source.Id == id).Sum(x => x.Increment);
+            var lastPoint = PointService.GetAll()
+                .Where(x => x.Source.Id == id)
+                .OrderByDescending(x => x.TimeStamp)
+                .FirstOrDefault()?.Amount ?? 0;
+
+            var incomesTotal = IncomeService.GetIncomeByAllTime(result);
+            var incomes = IncomeService.GetIncomeByLastMonths(result, 6);
+            client.SendOrUpdateMessage(chat, $"{result.Name}" +
+                $"\r\nДоходы за всё время: {incomesTotal.Sum():C}" +
+                $"\r\nПроверка: {lastPoint - totalCharged:C}" +
+                $"\r\n\r\n{string.Join("\r\n", incomes.Select((x, i) => $"{i + 1}) {x:C}"))}",
+                messageId,
+                new InlineKeyboardConstructor()
+                    .AddButtonDown("Назад", $"/source/{id}")
+                    .GetMarkup());
+        }
+
+        [TGPointer("set_category")]
+        private void Com_Set_Category(long chat, int messageId, Guid id, CategoryEnum category)
+        {
+            var result = SourceService.Get(id);
+            result.Category = category;
+            SourceService.Save(result);
+
+            if (result.Category == CategoryEnum.Deposit)
+            {
+                Com_To_EnterVkladInfo(chat, id, messageId);
+            }
+            else if (result.Category == CategoryEnum.TInvestAuto)
+            {
+                Com_To_EnterTInvestInfo(chat, id, messageId);
+            }
+            else
+            {
+                Com_Source(chat, id, messageId);
+            }
+        }
+
+        [TGPointer("delete_benifit")]
+        private void Com_Delete_Benifit(long chat, int messageId, Guid id)
+        {
+            var result = BenifitService.Get(id);
+            BenifitService.Delete(id);
+            Com_History(chat, result.Source.Id, messageId);
+        }
+
+        [TGPointer("try_delete_benifit")]
+        private void Com_Try_Delete_Benifit(long chat, int messageId, Guid id)
+        {
+            var result = BenifitService.Get(id);
+
+            client.SendOrUpdateMessage(chat,
+                $"Удаление пополнения {result.TimeStamp.ToShortDateString()}" +
+                $"\r\n{result.Value}" +
+                $"\r\n\r\nДействительно удалить?!",
+                messageId,
+                new InlineKeyboardConstructor()
+                    .AddButtonDown("🚫Удалить🚫", $"/delete_benifit/{id}")
+                    .AddButtonDown("Назад", $"/history/{result.Source.Id}")
+                    .GetMarkup());
+        }
+
+        [TGPointer("view_benifit")]
+        private void Com_View_Benifit(long chat, int messageId, Guid id)
+        {
+            var result = BenifitService.Get(id);
+
+            client.SendOrUpdateMessage(chat,
+                $"Пополнение {result.TimeStamp.ToShortDateString()}" +
+                $"\r\n{result.Value:C}",
+                messageId,
+                new InlineKeyboardConstructor()
+                    .AddButtonDown("Удалить", $"/try_delete_benifit/{id}")
+                    .AddButtonDown("Назад", $"/source/{result.Source.Id}")
+                    .GetMarkup());
+        }
+
+        [TGPointer("delete_point")]
+        private void Com_Delete_Point(long chat, int messageId, Guid id)
+        {
+            var result = PointService.Get(id);
+            PointService.Delete(id);
+            Com_History(chat, result.Source.Id, messageId);
+        }
+
+        [TGPointer("try_delete_point")]
+        private void Com_Try_Delete_Point(long chat, int messageId, Guid id)
+        {
+            var result = PointService.Get(id);
+
+            client.SendOrUpdateMessage(chat,
+                $"Удаление отметки {result.TimeStamp.ToShortDateString()}" +
+                $"\r\n{result.Amount}" +
+                $"\r\n\r\nДействительно удалить?!",
+                messageId,
+                new InlineKeyboardConstructor()
+                    .AddButtonDown("🚫Удалить🚫", $"/delete_point/{id}")
+                    .AddButtonDown("Назад", $"/history/{result.Source.Id}")
+                    .GetMarkup());
+        }
+
+        [TGPointer("view_point")]
+        private void Com_View_Point(long chat, int messageId, Guid id)
+        {
+            var result = PointService.Get(id);
+
+            client.SendOrUpdateMessage(chat,
+                $"Отметка {result.TimeStamp.ToShortDateString()}" +
+                $"\r\n{result.Amount:C}",
+                messageId,
+                new InlineKeyboardConstructor()
+                    .AddButtonDown("Удалить", $"/try_delete_point/{id}")
+                    .AddButtonDown("Назад", $"/source/{result.Source.Id}")
+                    .GetMarkup());
+        }
+
+        [TGPointer("try_delete_charge")]
+        private void Com_Try_Delete_Charge(long chat, int messageId, Guid id)
+        {
+            var result = ChargeService.Get(id);
+
+            client.SendOrUpdateMessage(chat,
+                $"Удаление пополнения {result.TimeStamp.ToShortDateString()}" +
+                $"\r\n{result.Increment}" +
+                $"\r\n\r\nДействительно удалить?!",
+                messageId,
+                new InlineKeyboardConstructor()
+                    .AddButtonDown("🚫Удалить🚫", $"/delete_charge/{id}")
+                    .AddButtonDown("Назад", $"/history/{result.Source.Id}")
+                    .GetMarkup());
+        }
+
+        [TGPointer("view_charge")]
+        private void Com_View_Charge(long chat, int messageId, Guid id)
+        {
+            var result = ChargeService.Get(id);
+
+            client.SendOrUpdateMessage(chat,
+                $"Пополнение {result.TimeStamp.ToShortDateString()}" +
+                $"\r\n{result.Increment:C}",
+                messageId,
+                new InlineKeyboardConstructor()
+                    .AddButtonDown("Удалить", $"/try_delete_charge/{id}")
+                    .AddButtonDown("Назад", $"/source/{result.Source.Id}")
+                    .GetMarkup());
+        }
+
+        [TGPointer("accept_changes")]
+        private void Com_Accept_Changes(long chat, Guid id)
+        {
+            if (!ChatUpdateInfoPointer.TryGetValue(chat, out TInvestSourceUpdateInfoForAccept infoForAccept) && infoForAccept.SourceId == id)
+            {
+                throw new ArgumentException("Значение в кэше не соответствует намерению. Сделайте операцию заново.");
+            }
+            var source = SourceService.Get(id);
+            infoForAccept.HistoryOpsDiff.Added.Select(x =>
+            {
+                return ChargeService.Save(new InvestCharge()
+                {
+                    Source = source,
+                    Increment = x.Increment,
+                    TimeStamp = x.TimeStamp,
+                });
+            })
+                .ToArray();
+
+
+            var charges = ChargeService.GetAll().Where(x => x.Source.Id == id).ToArray();
+            infoForAccept.HistoryOpsDiff.Removed.SelectMany(x =>
+            {
+                return charges.Where(y => y.TimeStamp.Date == x.TimeStamp.Date)
+                    .Select(y =>
+                    {
+                        ChargeService.Delete(y.Id);
+                        return y.Id;
+                    });
+            })
+                .ToArray();
+
+            infoForAccept.HistoryOpsDiff.Edited.Select(x =>
+            {
+                var exist = charges.SingleOrDefault(y => y.TimeStamp.Date == x.TimeStamp.Date);
+                exist.Increment = x.Increment;
+                return ChargeService.Save(exist);
+            })
+                .ToArray();
+
+            PointService.Save(new InvestPoint()
+            {
+                Source = source,
+                Amount = infoForAccept.NewValue,
+            });
+        }
+
+        [TGPointer("update_info")]
+        private void Com_Update_Info(long chat, Guid id)
+        {
+            client.SendTextMessageAsync(chat, "Эта операция может занять пару минут.");
+            client.SendChatActionAsync(chat, ChatAction.Typing);
+            var source = SourceService.Get(id);
+
+            var newValue = new TInvestService().GetAccountValue(source.TInvestAccountId);
+            var chargeDiff = new TInvestService().GetHistoryDiff(source);
+
+            ChatUpdateInfoPointer[chat] = new TInvestSourceUpdateInfoForAccept()
+            {
+                SourceId = id,
+                HistoryOpsDiff = chargeDiff,
+                NewValue = newValue
+            };
+
+            var addedText = chargeDiff.Added.Any()
+                ? "\r\n\r\nНовые операции:\r\n" + chargeDiff.Added.Select(x => $"{x.TimeStamp.ToShortDateString()}: {x.Increment:C}").Join("\r\n")
+                : string.Empty;
+
+            var editedText = chargeDiff.Edited.Any()
+                ? "\r\n\r\nИзмененные операции:\r\n" + chargeDiff.Edited.Select(x => $"{x.TimeStamp.ToShortDateString()}: {x.Increment:C}").Join("\r\n")
+                : string.Empty;
+
+            var removedText = chargeDiff.Removed.Any()
+                ? "\r\n\r\nУдаленные операции:\r\n" + chargeDiff.Removed.Select(x => $"{x.TimeStamp.ToShortDateString()}: {x.Increment:C}").Join("\r\n")
+                : string.Empty;
+
+            client.SendOrUpdateMessage(chat,
+                $"{source.Name} оценивается в {newValue:C}" +
+                $"{addedText}{editedText}{removedText}",
+                0,
+                new InlineKeyboardConstructor()
+                .AddButtonDown("Применить изменения", $"/accept_changes/{id}")
+                .GetMarkup());
+            Com_Source(chat, id);
+        }
+
+        [TGPointer("delete_charge")]
+        private void Com_Delete_Charge(long chat, int messageId, Guid id)
+        {
+            var result = ChargeService.Get(id);
+            ChargeService.Delete(id);
+            Com_History(chat, result.Source.Id, messageId);
         }
 
         private void Com_To_EnterVkladInfo(long chat, Guid id, int messageId)
@@ -519,6 +503,7 @@ namespace Buratino.API
                     .GetMarkup());
         }
 
+        [TGPointer("history")]
         private void Com_History(long chat, Guid id, int messageId)
         {
             var result = SourceService.Get(id);
@@ -567,6 +552,7 @@ namespace Buratino.API
                 .GetMarkup());
         }
 
+        [TGPointer("to_source")]
         private void Com_To_Source(long chat, int messageId)
         {
             ChatActionPointer[chat] = TGActionType.AddSource;
@@ -584,6 +570,7 @@ namespace Buratino.API
                     .GetMarkup());
         }
 
+        [TGPointer("to_point")]
         private void Com_To_Point(long chat, Guid id, int messageId = 0)
         {
             ChatSourcePointer[chat] = id;
@@ -602,6 +589,7 @@ namespace Buratino.API
                     .GetMarkup());
         }
 
+        [TGPointer("to_charge")]
         private void Com_To_Charge(long chat, Guid id, int messageId = 0)
         {
             ChatSourcePointer[chat] = id;
@@ -630,6 +618,7 @@ namespace Buratino.API
                     .GetMarkup());
         }
 
+        [TGPointer("to_benifit")]
         private void Com_To_Benifit(long chat, Guid id, int messageId = 0)
         {
             ChatSourcePointer[chat] = id;
@@ -658,6 +647,7 @@ namespace Buratino.API
                     .GetMarkup());
         }
 
+        [TGPointer("start", "menu")]
         private void Com_Menu(long chat, int messageId = 0)
         {
             var result = SourceService.GetStatsAll();
@@ -674,6 +664,7 @@ namespace Buratino.API
                     .GetMarkup());
         }
 
+        [TGPointer("plans")]
         private void Com_Plans(long chat, int messageId = 0, int target = 750000)
         {
             var result = ChargeService.ChargesByYear(target);
@@ -688,6 +679,7 @@ namespace Buratino.API
                     .GetMarkup());
         }
 
+        [TGPointer("source")]
         private void Com_Source(long chat, Guid id, int messageId = 0)
         {
             var result = SourceService.Get(id);
@@ -720,10 +712,11 @@ namespace Buratino.API
                     .GetMarkup());
         }
 
+        [TGPointer("sources")]
         private void Com_Sources(long chat, int messageId = 0)
         {
-            var points = PointService.GetAll();
-            var result = SourceService.GetAll().Where(x => !x.IsClosed);
+            var points = PointService.GetAll().ToArray();
+            var result = SourceService.GetAll().Where(x => !x.IsClosed).ToArray();
             client.SendOrUpdateMessage(chat, "Ваши источники дохода:", messageId,
                 new InlineKeyboardConstructor(result
                     .OrderBy(x => x.LastBalance)
@@ -746,6 +739,34 @@ namespace Buratino.API
                 .AddButtonDown("+Добавить", "/to_source")
                 .AddButtonDown("Назад", "/menu")
                 .GetMarkup());
+        }
+
+        private void InvokeCommand(KeyValuePair<MethodInfo, TGPointerAttribute> method, long chat, int messageId, string[] args)
+        {
+            var parameters = method.Key.GetParameters();
+            var arguments = new object[parameters.Length];
+            var comArgs = new Queue<string>(args);
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                var item = parameters[i];
+                if (item.Name == "chat")
+                    arguments[i] = chat;
+                else if (item.Name == "messageId")
+                    arguments[i] = messageId;
+                else if (comArgs.Any())
+                {
+                    arguments[i] = comArgs.Dequeue().Cast(item.ParameterType);
+                }
+                else if (item.IsOptional)
+                {
+                    arguments[i] = item.DefaultValue;
+                }
+                else
+                {
+                    throw new ArgumentException("Не хватает аргументов для вызова метода");
+                }
+            }
+            method.Key.Invoke(this, arguments);
         }
 
         private string ParseCommand(string query, out string[] args)

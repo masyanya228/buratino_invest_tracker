@@ -1,4 +1,6 @@
-﻿using LiteDB;
+﻿using FluentNHibernate.Testing.Values;
+
+using LiteDB;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -37,7 +39,7 @@ namespace Buratino.Xtensions
         }
 
         /// <summary>
-        /// Возравщает свойства, имеющие атрибут
+        /// Возвращает свойства, имеющие атрибут
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="obj"></param>
@@ -55,6 +57,48 @@ namespace Buratino.Xtensions
                 properties.Add(item);
             }
             return properties;
+        }
+
+        /// <summary>
+        /// Возвращает методы, имеющие атрибут
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public static IEnumerable<MethodInfo> GetMethodsByAttribute<T>(this object obj) where T : Attribute
+        {
+            List<MethodInfo> methods = new();
+            foreach (var item in obj.GetType().GetMethods())
+            {
+                var valueAttributes = item.GetCustomAttributes<T>(false);
+                if (valueAttributes is null)
+                    continue;
+                if (valueAttributes.Count() == 0)
+                    continue;
+                methods.Add(item);
+            }
+            return methods;
+        }
+
+        /// <summary>
+        /// Возвращает свойства, имеющие атрибут
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public static IEnumerable<KeyValuePair<MethodInfo, T>> GetMethodsWithAttribute<T>(this object obj) where T : Attribute
+        {
+            List<KeyValuePair<MethodInfo, T>> keyValuePairs = new();
+            foreach (var item in obj.GetType().GetMethods(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public))
+            {
+                var valueAttributes = item.GetCustomAttributes<T>(false);
+                if (valueAttributes is null)
+                    continue;
+                if (valueAttributes.Count() == 0)
+                    continue;
+                keyValuePairs.Add(new KeyValuePair<MethodInfo, T>(item, valueAttributes.First()));
+            }
+            return keyValuePairs;
         }
 
         /// <summary>
