@@ -33,6 +33,53 @@ CategoryOfCapital*/
         TransitBenefits(oldDB);
     }
 
+    private void TransitSources(LiteDatabase oldDB)
+    {
+        var source = oldDB.GetCollection("InvestSource", BsonAutoId.Int64);
+        var entityRep = Container.GetRepository<InvestSource>();
+        var items = source.FindAll();
+        foreach (var item in items)
+        {
+            var trans = new EntityKeyTransition()
+            {
+                EntityType = nameof(InvestSource),
+                OldId = item["_id"].AsInt64
+            };
+            var exist = TransRep.GetAll().Where(x => x.EntityType == trans.EntityType && x.OldId == trans.OldId).SingleOrDefault();
+            if (exist == null)
+            {
+                TransRep.Insert(trans);
+            }
+            else
+            {
+                continue;
+            }
+
+            var newSource = new InvestSource();
+            var entityType = typeof(InvestSource);
+            foreach (var field in item.GetElements())
+            {
+                if (field.Key == "_id")
+                    continue;
+                entityType
+                    .GetProperty(field.Key, BindingFlags.Public | BindingFlags.Instance)
+                    .SetValue(newSource, field.Value.RawValue);
+            }
+
+            if (exist == null)
+            {
+                entityRep.Insert(newSource);
+                trans.NewId = newSource.Id;
+                TransRep.Update(trans);
+            }
+            else
+            {
+                newSource.Id = exist.NewId;
+                entityRep.Update(newSource);
+            }
+        }
+    }
+
     private void TransitBenefits(LiteDatabase oldDB)
     {
         var source = oldDB.GetCollection("InvestBenifit", BsonAutoId.Int64);
@@ -55,8 +102,6 @@ CategoryOfCapital*/
             }
             else
             {
-                exist.TimeStamp = DateTime.Now;
-                TransRep.Update(exist);
                 continue;
             }
 
@@ -113,8 +158,6 @@ CategoryOfCapital*/
             }
             else
             {
-                exist.TimeStamp = DateTime.Now;
-                TransRep.Update(exist);
                 continue;
             }
 
@@ -149,55 +192,6 @@ CategoryOfCapital*/
         }
     }
 
-    private void TransitSources(LiteDatabase oldDB)
-    {
-        var source = oldDB.GetCollection("InvestSource", BsonAutoId.Int64);
-        var entityRep = Container.GetRepository<InvestSource>();
-        var items = source.FindAll();
-        foreach (var item in items)
-        {
-            var trans = new EntityKeyTransition()
-            {
-                EntityType = nameof(InvestSource),
-                OldId = item["_id"].AsInt64
-            };
-            var exist = TransRep.GetAll().Where(x => x.EntityType == trans.EntityType && x.OldId == trans.OldId).SingleOrDefault();
-            if (exist == null)
-            {
-                TransRep.Insert(trans);
-            }
-            else
-            {
-                exist.TimeStamp = DateTime.Now;
-                TransRep.Update(exist);
-                continue;
-            }
-
-            var newSource = new InvestSource();
-            var entityType = typeof(InvestSource);
-            foreach (var field in item.GetElements())
-            {
-                if (field.Key == "_id")
-                    continue;
-                entityType
-                    .GetProperty(field.Key, BindingFlags.Public | BindingFlags.Instance)
-                    .SetValue(newSource, field.Value.RawValue);
-            }
-
-            if (exist == null)
-            {
-                entityRep.Insert(newSource);
-                trans.NewId = newSource.Id;
-                TransRep.Update(trans);
-            }
-            else
-            {
-                newSource.Id = exist.NewId;
-                entityRep.Update(newSource);
-            }
-        }
-    }
-
     private void TransitCharges(LiteDatabase oldDB)
     {
         var source = oldDB.GetCollection("InvestCharge", BsonAutoId.Int64);
@@ -220,8 +214,6 @@ CategoryOfCapital*/
             }
             else
             {
-                exist.TimeStamp = DateTime.Now;
-                TransRep.Update(exist);
                 continue;
             }
 
