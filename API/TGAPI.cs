@@ -31,6 +31,7 @@ namespace Buratino.API
         private Dictionary<long, Guid> ChatSourcePointer;
         private Dictionary<long, TGActionType> ChatActionPointer;
         private Dictionary<long, TInvestSourceUpdateInfoForAccept> ChatUpdateInfoPointer;
+
         public void Start(string token)
         {
             SourceService = Container.GetDomainService<InvestSource>() as InvestSourceService;
@@ -68,124 +69,151 @@ namespace Buratino.API
         {
             if (update.Type == UpdateType.Message)
             {
-                var chat = update.Message.Chat.Id;
-                string text = update.Message.Text;
-                if (!text.StartsWith("/"))
-                {
-                    var lines = text.Split("\n", StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim('\r', ' ', '\t')).ToArray();
-                    if (!ChatActionPointer.TryGetValue(chat, out TGActionType actionType) || !ChatSourcePointer.TryGetValue(chat, out Guid id))
-                    {
-                        throw new ArgumentNullException(nameof(actionType));
-                    }
-
-                    if (actionType == TGActionType.AddCharge)
-                    {
-                        var source = SourceService.Get(id) ?? throw new ArgumentOutOfRangeException(nameof(id));
-                        ChargeService.Save(new InvestCharge()
-                        {
-                            Source = source,
-                            Increment = decimal.Parse(lines[0]),
-                            TimeStamp = lines.Length > 1
-                                ? DateTime.Parse(lines[1])
-                                : DateTime.Now,
-                        });
-                        Com_Source(chat, id);
-                    }
-                    else if (actionType == TGActionType.AddPoint)
-                    {
-                        var source = SourceService.Get(id) ?? throw new ArgumentOutOfRangeException(nameof(id));
-                        PointService.Save(new InvestPoint()
-                        {
-                            Source = source,
-                            Amount = decimal.Parse(lines[0]),
-                            TimeStamp = lines.Length > 1
-                                ? DateTime.Parse(lines[1])
-                                : DateTime.Now,
-                        });
-                        Com_Source(chat, id);
-                    }
-                    else if (actionType == TGActionType.AddBenifit)
-                    {
-                        var source = SourceService.Get(id) ?? throw new ArgumentOutOfRangeException(nameof(id));
-                        BenifitService.Save(new InvestBenifit()
-                        {
-                            Source = source,
-                            Value = decimal.Parse(lines[0]),
-                            TimeStamp = lines.Length > 1
-                                ? DateTime.Parse(lines[1])
-                                : DateTime.Now,
-                        });
-                        Com_Source(chat, id);
-                    }
-                    else if (actionType == TGActionType.AddSource)
-                    {
-                        var newSource = new InvestSource()
-                        {
-                            Name = lines[0],
-                            Description = lines[1],
-                            TimeStamp = lines.Length > 2
-                                ? DateTime.Parse(lines[2])
-                                : DateTime.Now,
-                        };
-                        if (SourceService.IsExists(newSource.Name))
-                        {
-                            throw new ArgumentException("Источник с таким наименованием уже есть");
-                        }
-                        SourceService.Save(newSource);
-                        Com_Source(chat, newSource.Id);
-                    }
-                    else if (actionType == TGActionType.EnterVkladInfo)
-                    {
-                        var source = SourceService.Get(id) ?? throw new ArgumentOutOfRangeException(nameof(id));
-
-                        source.BVEndStamp = DateTime.Parse(lines[0]);
-                        source.BVPS = decimal.Parse(lines[1]);
-                        source.BVCapitalisation = lines[2].Trim().ToLower() == "да";
-
-                        SourceService.Save(source);
-                        Com_Source(chat, source.Id);
-                    }
-                    else if (actionType == TGActionType.EnterTInvestId)
-                    {
-                        var source = SourceService.Get(id) ?? throw new ArgumentOutOfRangeException(nameof(id));
-
-                        source.TInvestAccountId = long.Parse(lines[0]);
-
-                        SourceService.Save(source);
-                        Com_Source(chat, source.Id);
-                    }
-                    return Task.CompletedTask;
-                }
-
-                var com = ParseCommand(text, out string[] args);
-                var availablePointers = this.GetMethodsWithAttribute<TGPointerAttribute>();
-                var method = availablePointers.SingleOrDefault(x => x.Value.Pointers.Contains(com));
-                if (method.Key is not null)
-                {
-                    InvokeCommand(method, chat, 0, args);
-                }
-                else
-                {
-                    throw new Exception("Не поддерживаемая команда");
-                }
+                return ProcessMessage(update);
             }
             else if (update.Type == UpdateType.CallbackQuery)
             {
-                var com = ParseCommand(update.CallbackQuery.Data, out string[] args);
-                var chat = update.CallbackQuery.Message.Chat.Id;
-                var messageId = update.CallbackQuery.Message.MessageId;
-                client.AnswerCallbackQueryAsync(update.CallbackQuery.Id);
+                return ProcessCallbackQuery(update);
+            }
+            else
+            {
+                return Task.CompletedTask;
+            }
+        }
 
-                var availablePointers = this.GetMethodsWithAttribute<TGPointerAttribute>();
-                var method = availablePointers.SingleOrDefault(x => x.Value.Pointers.Contains(com));
-                if (method.Key is not null)
+        private Task ProcessCallbackQuery(Update update)
+        {
+            var com = ParseCommand(update.CallbackQuery.Data, out string[] args);
+            var chat = update.CallbackQuery.Message.Chat.Id;
+            var messageId = update.CallbackQuery.Message.MessageId;
+            client.AnswerCallbackQueryAsync(update.CallbackQuery.Id);
+
+            var availablePointers = this.GetMethodsWithAttribute<TGPointerAttribute>();
+            var method = availablePointers.SingleOrDefault(x => x.Value.Pointers.Contains(com));
+            if (method.Key is not null)
+            {
+                InvokeCommand(method, chat, messageId, args);
+            }
+            else
+            {
+                throw new Exception("Не поддерживаемая команда");
+            }
+            return Task.CompletedTask;
+        }
+
+        private Task ProcessMessage(Update update)
+        {
+            var chat = update.Message.Chat.Id;
+            string text = update.Message.Text;
+            if (!text.StartsWith("/"))
+            {
+                return ProcessTextMessage(chat, text);
+            }
+            else
+            {
+                return ProcessCommandMessage(chat, text);
+            }
+        }
+
+        private Task ProcessCommandMessage(long chat, string text)
+        {
+            var com = ParseCommand(text, out string[] args);
+            var availablePointers = this.GetMethodsWithAttribute<TGPointerAttribute>();
+            var method = availablePointers.SingleOrDefault(x => x.Value.Pointers.Contains(com));
+            if (method.Key is not null)
+            {
+                InvokeCommand(method, chat, 0, args);
+            }
+            else
+            {
+                throw new Exception("Не поддерживаемая команда");
+            }
+            return Task.CompletedTask;
+        }
+
+        private Task ProcessTextMessage(long chat, string text)
+        {
+            var lines = text.Split("\n", StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim('\r', ' ', '\t')).ToArray();
+            if (!ChatActionPointer.TryGetValue(chat, out TGActionType actionType) || !ChatSourcePointer.TryGetValue(chat, out Guid id))
+            {
+                throw new ArgumentNullException(nameof(actionType));
+            }
+
+            if (actionType == TGActionType.AddCharge)
+            {
+                var source = SourceService.Get(id) ?? throw new ArgumentOutOfRangeException(nameof(id));
+                ChargeService.Save(new InvestCharge()
                 {
-                    InvokeCommand(method, chat, messageId, args);
-                }
-                else
+                    Source = source,
+                    Increment = decimal.Parse(lines[0]),
+                    TimeStamp = lines.Length > 1
+                        ? DateTime.Parse(lines[1])
+                        : DateTime.Now,
+                });
+                Com_Source(chat, id);
+            }
+            else if (actionType == TGActionType.AddPoint)
+            {
+                var source = SourceService.Get(id) ?? throw new ArgumentOutOfRangeException(nameof(id));
+                PointService.Save(new InvestPoint()
                 {
-                    throw new Exception("Не поддерживаемая команда");
+                    Source = source,
+                    Amount = decimal.Parse(lines[0]),
+                    TimeStamp = lines.Length > 1
+                        ? DateTime.Parse(lines[1])
+                        : DateTime.Now,
+                });
+                Com_Source(chat, id);
+            }
+            else if (actionType == TGActionType.AddBenifit)
+            {
+                var source = SourceService.Get(id) ?? throw new ArgumentOutOfRangeException(nameof(id));
+                BenifitService.Save(new InvestBenifit()
+                {
+                    Source = source,
+                    Value = decimal.Parse(lines[0]),
+                    TimeStamp = lines.Length > 1
+                        ? DateTime.Parse(lines[1])
+                        : DateTime.Now,
+                });
+                Com_Source(chat, id);
+            }
+            else if (actionType == TGActionType.AddSource)
+            {
+                var newSource = new InvestSource()
+                {
+                    Name = lines[0],
+                    Description = lines[1],
+                    TimeStamp = lines.Length > 2
+                        ? DateTime.Parse(lines[2])
+                        : DateTime.Now,
+                };
+                if (SourceService.IsExists(newSource.Name))
+                {
+                    throw new ArgumentException("Источник с таким наименованием уже есть");
                 }
+                SourceService.Save(newSource);
+                Com_Source(chat, newSource.Id);
+            }
+            else if (actionType == TGActionType.EnterVkladInfo)
+            {
+                var source = SourceService.Get(id) ?? throw new ArgumentOutOfRangeException(nameof(id));
+
+                source.BVEndStamp = DateTime.Parse(lines[0]);
+                source.BVPS = decimal.Parse(lines[1]);
+                source.BVCapitalisation = lines[2].Trim().ToLower() == "да";
+
+                SourceService.Save(source);
+                Com_Source(chat, source.Id);
+            }
+            else if (actionType == TGActionType.EnterTInvestId)
+            {
+                var source = SourceService.Get(id) ?? throw new ArgumentOutOfRangeException(nameof(id));
+
+                source.TInvestAccountId = long.Parse(lines[0]);
+
+                SourceService.Save(source);
+                Com_Source(chat, source.Id);
             }
             return Task.CompletedTask;
         }
