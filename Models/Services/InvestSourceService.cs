@@ -33,6 +33,7 @@ namespace Buratino.Models.Services
             }
         }
 
+        //todo - улучшить алгоритм расчета заработка
         private string CalcStatsForBankVklad(InvestSource source)
         {
             var allCharges = ChargeRepository.GetAll().Where(x => x.Source.Id == source.Id).OrderBy(x => x.TimeStamp).ToArray();
@@ -68,6 +69,8 @@ namespace Buratino.Models.Services
 
             var allPoints = PointRepository.GetAll().Where(x => x.Source.Id == source.Id).OrderBy(x => x.TimeStamp).ToArray();
 
+            var allBenefits = BenifitRepository.GetAll().Where(x => x.Source.Id == source.Id).OrderBy(x => x.TimeStamp).ToArray();
+
             var startDate = allCharges.FirstOrDefault().TimeStamp;
 
             DateTime lastPoint = allPoints.LastOrDefault()?.TimeStamp ?? DateTime.MinValue;
@@ -81,7 +84,7 @@ namespace Buratino.Models.Services
             if (lastPoint < lastCharge)
                 lastBalance = lastBalance + allCharges.Where(x => x.TimeStamp > lastPoint).Sum(x => x.Increment);
 
-            var profit = lastBalance - allCharges.Sum(x => x.Increment);
+            var profit = lastBalance - allCharges.Sum(x => x.Increment) + allBenefits.Sum(x => x.Value);
 
             var days = 0m;
             var curMoney = 0m;
