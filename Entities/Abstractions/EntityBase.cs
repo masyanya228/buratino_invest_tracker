@@ -9,26 +9,17 @@ namespace Buratino.Entities.Abstractions
 
         public virtual DateTime TimeStamp { get; set; } = DateTime.Now;
 
-        public virtual bool Equals(EntityBase other)
-        {
-            return other.GetType() == GetType()
-                && other.Id == Id;
-        }
+        public virtual bool Equals(EntityBase other) =>
+            other is not null
+            && other.GetType() == GetType()
+            && other.Id == Id;
 
-        public override bool Equals(object obj)
-        {
-            if (obj is null)
-                return false;
-            if (obj is EntityBase invest)
-            {
-                return Equals(invest);
-            }
-            return false;
-        }
+        public override bool Equals(object obj) => obj is EntityBase invest && Equals(invest);
 
-        public override int GetHashCode()
-        {
-            return Id.GetHashCode();
-        }
+        public override int GetHashCode() => Id.GetHashCode();
+
+        public static bool operator ==(EntityBase a, EntityBase b) => a.Equals(b);
+
+        public static bool operator !=(EntityBase a, EntityBase b) => !a.Equals(b);
     }
 }
