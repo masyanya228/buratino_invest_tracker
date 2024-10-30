@@ -1,6 +1,6 @@
 ﻿using Buratino.DI;
 using Buratino.Entities;
-using Buratino.Models.DomainService;
+using Buratino.Repositories.RepositoryStructure;
 using Buratino.Services;
 
 using LiteDB;

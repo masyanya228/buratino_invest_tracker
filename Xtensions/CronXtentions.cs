@@ -1,7 +1,6 @@
 ﻿using Quartz;
 using Buratino.DI;
 using Buratino.Jobs.Structures;
-using Buratino.Models.Jobs.Structures;
 
 namespace Buratino.Xtensions
 {

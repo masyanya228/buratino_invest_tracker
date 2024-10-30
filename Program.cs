@@ -6,15 +6,15 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.FileProviders;
 using Buratino.DI;
 using Buratino.Models.DomainService;
-using Buratino.Models.Repositories.Implementations;
-using Buratino.Models.Map.MapStructure;
-using Buratino.Models.Map.Implementations;
-using Buratino.Models.Repositories.Implementations.Postgres;
 using Buratino.Entities;
 using Buratino.Repositories.Implementations.Postgres;
-using Buratino.Models.Services;
 using Buratino.API;
-using Buratino.Models.Repositories;
+using Buratino.Maps.Implementations;
+using Buratino.Maps.MapStructure;
+using Buratino.Repositories;
+using Buratino.Repositories.Implementations;
+using Buratino.Repositories.RepositoryStructure;
+using Buratino.Services;
 
 internal class Program
 {

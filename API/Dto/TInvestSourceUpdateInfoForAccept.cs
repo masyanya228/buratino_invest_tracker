@@ -1,4 +1,4 @@
-﻿using Buratino.Models.Services.Dto;
+﻿using Buratino.Services.Dto;
 
 namespace Buratino.API.Dto
 {

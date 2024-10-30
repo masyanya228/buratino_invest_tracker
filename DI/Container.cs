@@ -1,7 +1,7 @@
 ﻿using Buratino.Entities.Abstractions;
 using Buratino.Models.DomainService;
 using Buratino.Models.DomainService.DomainStructure;
-
+using Buratino.Repositories.RepositoryStructure;
 using Buratino.Xtensions;
 
 namespace Buratino.DI
