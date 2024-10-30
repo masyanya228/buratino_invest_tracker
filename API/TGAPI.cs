@@ -5,7 +5,6 @@ using Buratino.Entities;
 using Buratino.Enums;
 using Buratino.Helpers;
 using Buratino.Models.DomainService.DomainStructure;
-using Buratino.Models.Services;
 using Buratino.Services;
 using Buratino.Xtensions;
 
@@ -26,6 +25,8 @@ namespace Buratino.API
         private InvestChargeService ChargeService;
         private InvestPointService PointService;
         private IDomainService<InvestBenifit> BenifitService;
+        private IDomainService<Filter> FilterService;
+        private IDomainService<FilterXrefCategory> FilterXrefCategoryService;
         private InvestCalcService CalcService;
         private InvestIncomeService IncomeService;
         private Dictionary<long, Guid> ChatSourcePointer;
@@ -38,6 +39,8 @@ namespace Buratino.API
             ChargeService = Container.GetDomainService<InvestCharge>() as InvestChargeService;
             PointService = Container.GetDomainService<InvestPoint>() as InvestPointService;
             BenifitService = Container.GetDomainService<InvestBenifit>();
+            FilterService = Container.GetDomainService<Filter>();
+            FilterXrefCategoryService = Container.GetDomainService<FilterXrefCategory>();
             CalcService = Container.Get<InvestCalcService>();
             IncomeService = Container.Get<InvestIncomeService>();
 
@@ -134,10 +137,11 @@ namespace Buratino.API
         private Task ProcessTextMessage(long chat, string text)
         {
             var lines = text.Split("\n", StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim('\r', ' ', '\t')).ToArray();
-            if (!ChatActionPointer.TryGetValue(chat, out TGActionType actionType) || !ChatSourcePointer.TryGetValue(chat, out Guid id))
+            if (!ChatActionPointer.TryGetValue(chat, out TGActionType actionType))
             {
                 throw new ArgumentNullException(nameof(actionType));
             }
+            ChatSourcePointer.TryGetValue(chat, out Guid id);
 
             if (actionType == TGActionType.AddCharge)
             {
@@ -215,7 +219,102 @@ namespace Buratino.API
                 SourceService.Save(source);
                 Com_Source(chat, source.Id);
             }
+            else if (actionType == TGActionType.AddFilter)
+            {
+                var newFilter = new Filter()
+                {
+                    Name = lines[0],
+                };
+                FilterService.Save(newFilter);
+                Com_Filter(chat, newFilter.Id);
+            }
             return Task.CompletedTask;
+        }
+
+        [TGPointer("fcs")]
+        private void Com_Filter_Category_Set(long chat, Guid id, CategoryEnum category, int messageId = 0)
+        {
+            var filter = FilterService.Get(id);
+            var exist = filter.Categories.FirstOrDefault(x => x.Category == category);
+            if (exist == null)
+            {
+                FilterXrefCategoryService.Save(new FilterXrefCategory()
+                {
+                    Category = category,
+                    Filter = filter,
+                });
+            }
+            else
+            {
+                FilterXrefCategoryService.Delete(exist);
+            }
+            Com_Filter_Categories(chat, filter.Id, messageId);
+        }
+        
+        [TGPointer("fcit")]
+        private void Com_Filter_Category_Include_Toggle(long chat, Guid id, int messageId = 0)
+        {
+            var filter = FilterService.Get(id);
+            filter.IsIncludeCategories = !filter.IsIncludeCategories;
+            FilterService.Save(filter);
+            Com_Filter_Categories(chat, filter.Id, messageId);
+        }
+
+        [TGPointer("filter_categories")]
+        private void Com_Filter_Categories(long chat, Guid id, int messageId = 0)
+        {
+            var filter = FilterService.Get(id);
+            var title = filter.IsIncludeCategories ? "Включенные" : "Исключенные";
+            var task = client.SendOrUpdateMessage(chat,
+                $"{filter.Name}" +
+                $"\r\n{title} категории:",
+                messageId,
+                new InlineKeyboardConstructor(Enum.GetValues<CategoryEnum>().ToGrid(x => (filter.Categories.Any(y => y.Category == x) ? "✅" : "") + x.ToString(), x => $"/fcs/{id}/{x}", 1))
+                    .AddButtonDown(title, $"/fcit/{id}")
+                    .AddButtonDown("Назад", $"/filters")
+                    .GetMarkup());
+            task.GetAwaiter().GetResult();
+        }
+
+        [TGPointer("filter")]
+        private void Com_Filter(long chat, Guid id, int messageId = 0)
+        {
+            var filter = FilterService.Get(id);
+            var title = filter.IsIncludeCategories ? "Включенные" : "Исключенные";
+            client.SendOrUpdateMessage(chat, $"{filter.Name}" +
+                $"\r\n{title} категории:" +
+                $"{filter.Categories.Join("\r\n", x => x.Category.ToString())}",
+                messageId,
+                new InlineKeyboardConstructor()
+                    .AddButtonDown("Настроить категории", $"/filter_categories/{id}")
+                    .AddButtonDown("Назад", $"/filters")
+                    .GetMarkup());
+        }
+        
+        [TGPointer("to_filter")]
+        private void Com_To_Filter(long chat, int messageId)
+        {
+            ChatActionPointer[chat] = TGActionType.AddFilter;
+            client.SendOrUpdateMessage(chat, $"Напишите название фильтра:",
+                messageId,
+                new InlineKeyboardConstructor()
+                    .AddButtonDown("Назад", $"/filters")
+                    .GetMarkup());
+        }
+
+        [TGPointer("filters")]
+        private void Com_Filters(long chat, int messageId)
+        {
+            var filters = FilterService
+                .GetAll()
+                .ToArray();
+
+            client.SendOrUpdateMessage(chat, $"Фильтры:",
+                messageId,
+                new InlineKeyboardConstructor(filters.ToGrid(x => x.Name, x => $"/filter/{x.Id}", 3))
+                    .AddButtonDown("+Добавить", $"/to_filter")
+                    .AddButtonDown("Назад", $"/menu")
+                    .GetMarkup());
         }
 
         [TGPointer("get_capital_categories")]
@@ -234,21 +333,26 @@ namespace Buratino.API
         }
 
         [TGPointer("fact_income_all")]
-        private void Com_Fact_Income_All(long chat, int messageId)
+        private void Com_Fact_Income_All(long chat, int messageId, Guid filterId = default)
         {
-            IEnumerable<InvestSource> activeSources = SourceService.GetAll().Where(x => !x.IsClosed);
+            IEnumerable<InvestSource> activeSources = SourceService.GetAll().Where(x => !x.IsClosed).ToArray();
+            if (filterId != default)
+            {
+                var filter = FilterService.Get(filterId);
+                activeSources = activeSources.Where(x => filter.Categories.Any(y => y.Category == x.Category)).ToArray();
+            }
             var lastPoint = activeSources.Sum(x => x.LastBalance);
             var totalCharged = activeSources
                 .SelectMany(x => ChargeService.GetAll().Where(y => y.Source.Id == x.Id))
                 .Sum(x => x.Increment);
 
-            var incomesTotal = IncomeService.GetAllIncomeByAllTime();
+            var incomesTotal = IncomeService.GetIncomeByAllTime(activeSources);
             client.SendOrUpdateMessage(chat, $"Фактические доходы по всем источникам" +
                 $"\r\nДоходы за всё время: {incomesTotal.SelectMany(x => x.Value).Sum():C}" +
                 $"\r\nПроверка (вход выход): {lastPoint - totalCharged:C}" +
                 $"\r\n\r\n{string.Join("\r\n", incomesTotal.ToSumList().Select((x, i) => $"{i + 1}) {x:C}"))}",
                 messageId,
-                new InlineKeyboardConstructor()
+                new InlineKeyboardConstructor(FilterService.GetAll().ToGrid(x => x.Name, x => $"/fact_income_all/{x.Id}", 3))
                     .AddButtonDown("Назад", $"/menu")
                     .GetMarkup());
         }
@@ -256,18 +360,18 @@ namespace Buratino.API
         [TGPointer("fact_income")]
         private void Com_Fact_Income(long chat, int messageId, Guid id)
         {
-            var result = SourceService.Get(id);
-            var totalCharged = ChargeService.GetAll().Where(x => x.Source.Id == id).Sum(x => x.Increment);
-            var lastPoint = PointService.GetAll()
-                .Where(x => x.Source.Id == id)
+            var source = SourceService.Get(id);
+            var totalCharged = source.Charges.Sum(x => x.Increment);
+            var totalBenefited = source.Benifits.Sum(x => x.Value);
+            var lastPoint = source.Points
                 .OrderByDescending(x => x.TimeStamp)
                 .FirstOrDefault()?.Amount ?? 0;
 
-            var incomesTotal = IncomeService.GetIncomeByAllTime(result);
-            var incomes = IncomeService.GetIncomeByLastMonths(result, 6);
-            client.SendOrUpdateMessage(chat, $"{result.Name}" +
+            var incomesTotal = IncomeService.GetIncomeByAllTime(source);
+            var incomes = IncomeService.GetIncomeByLastMonths(source, 6);
+            client.SendOrUpdateMessage(chat, $"{source.Name}" +
                 $"\r\nДоходы за всё время: {incomesTotal.Sum():C}" +
-                $"\r\nПроверка: {lastPoint - totalCharged:C}" +
+                $"\r\nПроверка: {lastPoint - totalCharged + totalBenefited:C}" +
                 $"\r\n\r\n{string.Join("\r\n", incomes.Select((x, i) => $"{i + 1}) {x:C}"))}",
                 messageId,
                 new InlineKeyboardConstructor()
@@ -689,6 +793,7 @@ namespace Buratino.API
                     .AddButtonDown("Планы", $"/plans")
                     .AddButtonDown("Факт", $"/fact_income_all")
                     .AddButtonRight("По категориям", $"/get_capital_categories")
+                    .AddButtonDown("Фильтры", "/filters")
                     .GetMarkup());
         }
 

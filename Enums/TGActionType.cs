@@ -7,6 +7,7 @@
         AddBenifit,
         AddSource,
         EnterVkladInfo,
-        EnterTInvestId
+        EnterTInvestId,
+        AddFilter,
     }
 }
