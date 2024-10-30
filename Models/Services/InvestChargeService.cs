@@ -44,6 +44,5 @@ namespace Buratino.Models.Services
             Container.Get<InvestCalcService>().CalcCatiptalCategories(Container.GetRepository<InvestSource>().Get(entity.Source.Id));
             return res;
         }
-
     }
 }

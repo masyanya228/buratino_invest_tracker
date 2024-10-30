@@ -57,21 +57,7 @@ namespace Buratino.DI
 
         public static IRepository<T> GetRepository<T>(string key = null) where T : IEntityBase
         {
-            if (key is null)
-            {
-                if (typeof(T).IsImplementationOfClass(typeof(PersistentEntity)))
-                {
-                    return Get<IRepository<T>>("PersistentEntity");
-                }
-                else
-                {
-                    return Get<IRepository<T>>("IEntity");
-                }
-            }
-            else
-            {
-                return Get<IRepository<T>>(key);
-            }
+            return Get<IRepository<T>>(key);
         }
 
         public static IDomainService<T> GetDomainService<T>(string key = null) where T : IEntityBase

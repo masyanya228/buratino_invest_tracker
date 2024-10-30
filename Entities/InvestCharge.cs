@@ -2,7 +2,7 @@
 
 namespace Buratino.Entities
 {
-    public class InvestCharge : EntityBase
+    public class InvestCharge : PersistentEntity
     {
         public virtual InvestSource Source { get; set; }
 

@@ -14,6 +14,7 @@ using Buratino.Entities;
 using Buratino.Repositories.Implementations.Postgres;
 using Buratino.Models.Services;
 using Buratino.API;
+using Buratino.Models.Repositories;
 
 internal class Program
 {
@@ -24,8 +25,7 @@ internal class Program
         // Add services to the container.
         builder.Services.AddControllersWithViews();
 
-        builder.Services.AddKeyedSingleton(typeof(IRepository<>), "IEntity", typeof(PGRepository<>));
-        builder.Services.AddKeyedSingleton(typeof(IRepository<>), "PersistentEntity", typeof(PGPersistentRepository<>));
+        builder.Services.AddSingleton(typeof(IRepository<>), typeof(PGRepository<>));
 
         builder.Services.AddSingleton(typeof(IDomainService<>), typeof(DefaultDomainService<>));
         
@@ -42,6 +42,9 @@ internal class Program
         builder.Services.AddSingleton(typeof(IDomainService<InvestSource>), typeof(InvestSourceService));
         builder.Services.AddSingleton(typeof(IDomainService<InvestCharge>), typeof(InvestChargeService));
         builder.Services.AddSingleton(typeof(IDomainService<InvestPoint>), typeof(InvestPointService));
+        
+        builder.Services.AddSingleton(typeof(IRepository<InvestCharge>), typeof(InvestChargeRepository));
+        builder.Services.AddSingleton(typeof(IRepository<InvestSource>), typeof(InvestSourceRepository));
 
 
         builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -99,9 +102,6 @@ internal class Program
     public static void OnStarted()
     {
         new TGAPI().Start("7230300926:AAHenYludkc2ga1kuqhPZHGClQRlqlLXxjU");
-
-        var acc = Container.Get<IRepository<InvestSource>>("IEntity").GetAll().ToArray();
-        var acc2 = Container.Get<IRepository<InvestSource>>("PersistentEntity").GetAll().ToArray();
 
         var ds2 = Container.GetDomainService<InvestSource>().GetAll().ToArray();
 
