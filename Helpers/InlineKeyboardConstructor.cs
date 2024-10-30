@@ -19,6 +19,11 @@ namespace Buratino.Helpers
             }
         }
 
+        public InlineKeyboardConstructor(IEnumerable<IEnumerable<InlineKeyboardButton>> array)
+        {
+            KeyboardButtons = array.Select(x => x.ToList()).ToList();
+        }
+
         public InlineKeyboardConstructor AddButtonRight(string title, string callbackData)
         {
             if (!KeyboardButtons.Any())
