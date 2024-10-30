@@ -18,8 +18,8 @@ namespace Buratino.Entities.Abstractions
 
         public override int GetHashCode() => Id.GetHashCode();
 
-        public static bool operator ==(EntityBase a, EntityBase b) => a.Equals(b);
+        public static bool operator ==(EntityBase a, EntityBase b) => a?.Equals(b) ?? (a is null && b is null);
 
-        public static bool operator !=(EntityBase a, EntityBase b) => !a.Equals(b);
+        public static bool operator !=(EntityBase a, EntityBase b) => !a?.Equals(b) ?? (a is null ^ b is null);
     }
 }
