@@ -1,8 +1,8 @@
 ﻿using Buratino.DI;
 using Buratino.Entities;
-using Buratino.Models.DomainService;
+using Buratino.Repositories.RepositoryStructure;
 
-namespace Buratino.Models.Services
+namespace Buratino.Services
 {
     public class InvestIncomeService
     {
@@ -11,7 +11,7 @@ namespace Buratino.Models.Services
         public IRepository<InvestCharge> ChargeRepository { get; set; } = Container.GetRepository<InvestCharge>();
 
         public IRepository<InvestPoint> PointRepository { get; set; } = Container.GetRepository<InvestPoint>();
-        
+
         public IRepository<InvestSource> SourceRepository { get; set; } = Container.GetRepository<InvestSource>();
 
         /// <summary>
@@ -20,8 +20,17 @@ namespace Buratino.Models.Services
         /// <returns></returns>
         public Dictionary<InvestSource, List<decimal>> GetAllIncomeByAllTime()
         {
+            return GetIncomeByAllTime(SourceRepository.GetAll().ToArray());
+        }
+
+        /// <summary>
+        /// Возвращает всю историю по указанным источникам
+        /// </summary>
+        /// <returns></returns>
+        public Dictionary<InvestSource, List<decimal>> GetIncomeByAllTime(IEnumerable<InvestSource> sources)
+        {
             Dictionary<InvestSource, List<decimal>> totalPerMonth = new();
-            foreach (var source in SourceRepository.GetAll())
+            foreach (var source in sources)
             {
                 totalPerMonth.Add(source, GetIncomeByAllTime(source).ToList());
             }

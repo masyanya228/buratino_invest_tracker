@@ -35,7 +35,7 @@ namespace Buratino.Services
         //todo - улучшить алгоритм расчета заработка
         private string CalcStatsForBankVklad(InvestSource source)
         {
-            var allCharges = ChargeRepository.GetAll().Where(x => x.Source.Id == source.Id).OrderBy(x => x.TimeStamp).ToArray();
+            var allCharges = source.Charges.OrderBy(x => x.TimeStamp).ToArray();
             if (allCharges.Length == 0)
                 throw new Exception("Вы пока не пополняли поток");
 
