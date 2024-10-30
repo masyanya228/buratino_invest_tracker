@@ -42,6 +42,16 @@ namespace Buratino.Helpers
 
         public InlineKeyboardMarkup GetMarkup()
         {
+            foreach (var row in KeyboardButtons)
+            {
+                foreach (var item in row)
+                {
+                    if (item.Text is null)
+                        item.Text = "Пусто";
+                    if (item.CallbackData is null)
+                        item.CallbackData = "/menu";
+                }
+            }
             return new InlineKeyboardMarkup(KeyboardButtons);
         }
     }
