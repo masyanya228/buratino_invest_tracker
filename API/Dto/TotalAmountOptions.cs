@@ -1,16 +1,7 @@
-﻿using Newtonsoft.Json;
-
-namespace Buratino.API.Dto
+﻿namespace Buratino.API.Dto
 {
-    public class TotalAmountOptions
+    public class TotalAmountOptions : CurrencyPrice
     {
-        [JsonProperty("currency")]
-        public string Currency { get; set; }
 
-        [JsonProperty("units")]
-        public decimal Units { get; set; }
-
-        [JsonProperty("nano")]
-        public int Nano { get; set; }
     }
 }

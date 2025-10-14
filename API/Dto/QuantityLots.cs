@@ -1,13 +1,6 @@
-﻿using Newtonsoft.Json;
-
-namespace Buratino.API.Dto
+﻿namespace Buratino.API.Dto
 {
-    public class QuantityLots
+    public class QuantityLots : PriceBase
     {
-        [JsonProperty("units")]
-        public decimal Units { get; set; }
-
-        [JsonProperty("nano")]
-        public int Nano { get; set; }
     }
 }

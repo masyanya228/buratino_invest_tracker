@@ -20,6 +20,7 @@ internal class Program
 {
     private static void Main(string[] args)
     {
+        var newValue = new TInvestAPI().Bonds();
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.

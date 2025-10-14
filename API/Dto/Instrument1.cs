@@ -144,5 +144,8 @@ namespace Buratino.API.Dto
 
         [JsonProperty("bondType")]
         public string BondType { get; set; }
+
+        [JsonProperty("callDate")]
+        public DateTime? CallDate { get; set; }
     }
 }

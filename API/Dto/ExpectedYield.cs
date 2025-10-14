@@ -1,13 +1,6 @@
-﻿using Newtonsoft.Json;
-
-namespace Buratino.API.Dto
+﻿namespace Buratino.API.Dto
 {
-    public class ExpectedYield
+    public class ExpectedYield : PriceBase
     {
-        [JsonProperty("units")]
-        public decimal Units { get; set; }
-
-        [JsonProperty("nano")]
-        public int Nano { get; set; }
     }
 }

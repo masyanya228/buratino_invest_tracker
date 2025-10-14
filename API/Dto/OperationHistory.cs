@@ -3,16 +3,9 @@ using Newtonsoft.Json;
 
 namespace Buratino.API.Dto
 {
-    public class AccruedInt
+    public class AccruedInt : CurrencyPrice
     {
-        [JsonProperty("nano")]
-        public int Nano { get; set; }
 
-        [JsonProperty("currency")]
-        public string Currency { get; set; }
-
-        [JsonProperty("units")]
-        public string Units { get; set; }
     }
 
     public class ChildOperation
@@ -24,16 +17,9 @@ namespace Buratino.API.Dto
         public Payment Payment { get; set; }
     }
 
-    public class Commission
+    public class Commission : CurrencyPrice
     {
-        [JsonProperty("nano")]
-        public int Nano { get; set; }
 
-        [JsonProperty("currency")]
-        public string Currency { get; set; }
-
-        [JsonProperty("units")]
-        public string Units { get; set; }
     }
 
     public class Item
@@ -117,28 +103,14 @@ namespace Buratino.API.Dto
         public string Name { get; set; }
     }
 
-    public class Payment
+    public class Payment : CurrencyPrice
     {
-        [JsonProperty("nano")]
-        public int Nano { get; set; }
 
-        [JsonProperty("currency")]
-        public string Currency { get; set; }
-
-        [JsonProperty("units")]
-        public decimal Units { get; set; }
     }
 
-    public class Price
+    public class Price : CurrencyPrice
     {
-        [JsonProperty("nano")]
-        public int Nano { get; set; }
 
-        [JsonProperty("currency")]
-        public string Currency { get; set; }
-
-        [JsonProperty("units")]
-        public string Units { get; set; }
     }
 
     public class OperationHistory
@@ -180,25 +152,13 @@ namespace Buratino.API.Dto
         public List<Trade> Trades { get; set; }
     }
 
-    public class Yield
+    public class Yield : CurrencyPrice
     {
-        [JsonProperty("nano")]
-        public int Nano { get; set; }
 
-        [JsonProperty("currency")]
-        public string Currency { get; set; }
-
-        [JsonProperty("units")]
-        public string Units { get; set; }
     }
 
-    public class YieldRelative
+    public class YieldRelative : PriceBase
     {
-        [JsonProperty("nano")]
-        public int Nano { get; set; }
 
-        [JsonProperty("units")]
-        public string Units { get; set; }
     }
-
 }
