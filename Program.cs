@@ -20,7 +20,8 @@ internal class Program
 {
     private static void Main(string[] args)
     {
-        var newValue = new TInvestAPI().Bonds();
+        var newValue = new TInvestService().GetMyBondsMetrics(2287699144);
+        var avg = newValue.Where(x => x.IsFixedCouponsToEnd()).Average(x => x.GetYearlyIncome());
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.

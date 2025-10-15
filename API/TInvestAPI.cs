@@ -4,6 +4,7 @@ using Buratino.Xtensions;
 using Newtonsoft.Json;
 
 using RestSharp;
+using System.Security.Policy;
 
 namespace Buratino.API
 {
@@ -11,7 +12,11 @@ namespace Buratino.API
     {
         const string tokenAPI = "t.9BmkVm3uGX6xtaQkLQL9IpKfmBFwmmSDPGWYjdLIZJQFHIH5FrXuRFGCYT2OvuybsdFqmv9WmYjQs1m6kjQb0Q";
 
-        public Bonds Bonds()
+        /// <summary>
+        /// Возвращает все облигации
+        /// </summary>
+        /// <returns></returns>
+        public Bonds GetBonds()
         {
             var url = "https://invest-public-api.tinkoff.ru/rest/tinkoff.public.invest.api.contract.v1.InstrumentsService/Bonds";
             RestClient restClient = new RestClient(url);
@@ -23,48 +28,6 @@ namespace Buratino.API
             });
             var resp = new { Content = File.ReadAllText("C:\\Users\\User\\Desktop\\Bonds.txt") };//restClient.Execute(restRequest);
             var obj = JsonConvert.DeserializeObject<Bonds>(resp.Content);
-
-            var now = DateTime.Now.AddMonths(6);
-
-            var filtered = obj.Instruments
-                .Where(x => x.Currency == "rub")
-                .Where(x => x.CouponQuantityPerYear >= 4)
-                .Where(x => x.MaturityDate > now && (x.CallDate.HasValue ? x.CallDate > now : true))
-                .Where(x => x.Nominal.Units < 5000)
-                .Where(x => x.BuyAvailableFlag)
-                .Where(x => x.SellAvailableFlag)
-                .Where(x => !x.FloatingCouponFlag)
-                .Where(x => !x.PerpetualFlag)
-                .Where(x => !x.PerpetualFlag)
-                .Where(x => x.RealExchange.In("REAL_EXCHANGE_MOEX", "REAL_EXCHANGE_RTS"))
-                .Where(x => !x.ForQualInvestorFlag)
-                .Where(x => x.LiquidityFlag)
-                .Where(x => x.RiskLevel.In("RISK_LEVEL_LOW", "RISK_LEVEL_MODERATE"))
-                .Select(x => new BondMetric() { Instrument = x })
-                .ToArray();
-
-            var uids = filtered.Select(x => x.Instrument.Uid);
-
-            //Расчет цены покупки
-            var lastPrices = GetLastPrices(uids.ToArray());
-            foreach (var item in filtered)
-            {
-                var instrument = lastPrices.LastPrices.FirstOrDefault(x => x.InstrumentUid == item.Instrument.Uid);
-                item.LastPrice = instrument.Price;
-            }
-
-            //Купоны
-            foreach (var uid in uids)
-            {
-                var coupons = GetBondCoupons(uid);
-                var instrument = filtered.FirstOrDefault(x => x.Instrument.Uid == uid);
-                instrument.Coupons = coupons;
-            }
-
-            var resTable = filtered
-                .OrderBy(x => x.Instrument.Name)
-                .Select(x => $"{x.Instrument.Name}\t{x.Instrument.Brand.LogoName}\t{x.Instrument.Ticker}\t{x.Instrument.Uid}\t{x.Instrument.Figi}\t{x.Instrument.RiskLevel}\t{x.GetYearlyIncome()}\t{x.Instrument.CouponQuantityPerYear}\t{x.EndDate.Subtract(DateTime.Now).TotalDays / 30}\t{x.Instrument.Nominal.Units}\t{x.TotalPrice}\t{x.Instrument.Sector}")
-                .Join("\r\n");
             return obj;
         }
 
@@ -80,6 +43,21 @@ namespace Buratino.API
             });
             var resp = restClient.Execute(restRequest);
             var obj = JsonConvert.DeserializeObject<GetLastPrices>(resp.Content);
+            return obj;
+        }
+
+        public GetAccounts GetAccounts()
+        {
+            var url = "https://invest-public-api.tinkoff.ru/rest/tinkoff.public.invest.api.contract.v1.MarketDataService/GetLastPrices";
+            RestClient restClient = new RestClient(url);
+            RestRequest restRequest = new RestRequest(url, Method.Post);
+            restRequest.AddHeader("Authorization", "Bearer " + tokenAPI);
+            restRequest.AddBody(new
+            {
+                status = "ACCOUNT_STATUS_OPEN"
+            });
+            var resp = restClient.Execute(restRequest);
+            var obj = JsonConvert.DeserializeObject<GetAccounts>(resp.Content);
             return obj;
         }
 
