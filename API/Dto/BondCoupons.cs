@@ -27,7 +27,7 @@ namespace Buratino.API.Dto
         public PayOneBond PayOneBond { get; set; }
 
         [JsonProperty("couponType")]
-        public string CouponType { get; set; }
+        public CouponTypes CouponType { get; set; }
 
         [JsonProperty("couponStartDate")]
         public DateTime CouponStartDate { get; set; }

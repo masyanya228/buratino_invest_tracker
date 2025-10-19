@@ -15,13 +15,28 @@ using Buratino.Repositories;
 using Buratino.Repositories.Implementations;
 using Buratino.Repositories.RepositoryStructure;
 using Buratino.Services;
+using Buratino.Xtensions;
 
-internal class Program
+public class Program
 {
     private static void Main(string[] args)
     {
-        var newValue = new TInvestService().GetMyBondsMetrics(2287699144);
-        var avg = newValue.Where(x => x.IsFixedCouponsToEnd()).Average(x => x.GetYearlyIncome());
+        //var ops = new TInvestAPI().GetOperations(2287699144);
+        //var opsText = ops.Items.Select(x => $"{x.Type}\t{x.Figi}\t{x.Payment.Total}\t{x.Commission.Total}").Join("\r\n");
+        //var newValue = new TInvestService().GetQueueToSellByProfit(2287699144);
+        //var riskGroups = newValue.GroupBy(x => x.Instrument.RiskLevel).ToList();
+        //var notFixed = newValue.Where(x => x.IsFixedCoupons()).ToArray();
+        //var avg = newValue.Where(x => x.IsFixedCoupons()).Average(x => x.GetYearlyIncome());
+        var sumText = new TInvestService().GetBondAnalizeTable();
+            //.Select(x =>
+            //{
+            //    //RUB
+            //    //FIXED
+            //    //Equals
+            //    //Announsed
+            //    //Ammortization
+            //    return $"{x.Instrument.Name}\t{x.Instrument.Ticker}\t{x.Instrument.Uid}\t{(x.GetIsRUB() ? "T" : "F")}\t{(x.IsFixed ? "T" : "F")}\t{(x.IsEquals ? "T" : "F")}\t{(x.IsAnnounsed ? "T" : "F")}\t{(x.IsAmortization ? "T" : "F")}";
+            //}).Join("\r\n");
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.

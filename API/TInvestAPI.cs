@@ -1,10 +1,8 @@
-﻿using Buratino.Analitics.Dto;
-using Buratino.API.Dto;
+﻿using Buratino.API.Dto;
 using Buratino.Xtensions;
 using Newtonsoft.Json;
 
 using RestSharp;
-using System.Security.Policy;
 
 namespace Buratino.API
 {
@@ -16,7 +14,7 @@ namespace Buratino.API
         /// Возвращает все облигации
         /// </summary>
         /// <returns></returns>
-        public Bonds GetBonds()
+        public Bonds GetAllBonds()
         {
             var url = "https://invest-public-api.tinkoff.ru/rest/tinkoff.public.invest.api.contract.v1.InstrumentsService/Bonds";
             RestClient restClient = new RestClient(url);
@@ -26,9 +24,37 @@ namespace Buratino.API
             {
                 instrumentStatus = "INSTRUMENT_STATUS_UNSPECIFIED"
             });
-            var resp = new { Content = File.ReadAllText("C:\\Users\\User\\Desktop\\Bonds.txt") };//restClient.Execute(restRequest);
-            var obj = JsonConvert.DeserializeObject<Bonds>(resp.Content);
-            return obj;
+            if (AllBondCache(out Bonds bonds, out string cacheName))
+            {
+                return bonds;
+            }
+            else
+            {
+                Thread.Sleep(550);
+                var resp = restClient.Execute(restRequest);
+                File.WriteAllText(cacheName, resp.Content);
+                return JsonConvert.DeserializeObject<Bonds>(resp.Content);
+            }
+        }
+
+        public bool AllBondCache(out Bonds bonds, out string cacheName)
+        {
+            string path = @"Cache/tinvest/";
+            cacheName = Path.Combine(path, $"ab.txt");
+            if (!Directory.Exists(path))
+            {
+                var res = Directory.CreateDirectory(path);
+            }
+            if (File.Exists(cacheName))
+            {
+                bonds = JsonConvert.DeserializeObject<Bonds>(File.ReadAllText(cacheName));
+                return true;
+            }
+            else
+            {
+                bonds = null;
+                return false;
+            }
         }
 
         public GetLastPrices GetLastPrices(string[] uids)
@@ -168,7 +194,7 @@ namespace Buratino.API
             return obj;
         }
 
-        public OperationHistory GetOperations(string accountId, string instrumentUid = null)
+        public OperationHistory GetOperations(long accountId, string instrumentUid = null)
         {
             var url = "https://invest-public-api.tinkoff.ru/rest/tinkoff.public.invest.api.contract.v1.OperationsService/GetOperationsByCursor";
             RestClient restClient = new RestClient(url);
@@ -179,19 +205,28 @@ namespace Buratino.API
                 accountId,
                 instrumentId = instrumentUid,
                 limit = 1000,
-                operationTypes = new string[]
-                {
-                    "OPERATION_TYPE_INPUT",
-                    "OPERATION_TYPE_OUTPUT",
-                    "OPERATION_TYPE_DIV_EXT",
-                    "OPERATION_TYPE_OUTPUT_ACQUIRING",
-                    "OPERATION_TYPE_INPUT_ACQUIRING",
-                    "OPERATION_TYPE_OUT_MULTI",
-                    "OPERATION_TYPE_INP_MULTI",
-                }
+                //operationTypes = new string[]
+                //{
+                //    "OPERATION_TYPE_INPUT",
+                //    "OPERATION_TYPE_OUTPUT",
+                //    "OPERATION_TYPE_DIV_EXT",
+                //    "OPERATION_TYPE_OUTPUT_ACQUIRING",
+                //    "OPERATION_TYPE_INPUT_ACQUIRING",
+                //    "OPERATION_TYPE_OUT_MULTI",
+                //    "OPERATION_TYPE_INP_MULTI",
+                //}
             });
             var resp = restClient.Execute(restRequest);
             var obj = JsonConvert.DeserializeObject<OperationHistory>(resp.Content);
+            if(obj.Items.Where(x => x.Type.NotIn(
+                Enums.OperationType.OPERATION_TYPE_BROKER_FEE,
+                Enums.OperationType.OPERATION_TYPE_BUY,
+                Enums.OperationType.OPERATION_TYPE_COUPON,
+                Enums.OperationType.OPERATION_TYPE_INPUT))
+                .Any())
+            {
+                throw new Exception("Новый тип операции");
+            }
             return obj;
         }
     }

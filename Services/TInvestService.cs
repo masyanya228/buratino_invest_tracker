@@ -1,6 +1,5 @@
 ﻿using Buratino.Analitics.Dto;
 using Buratino.API;
-using Buratino.API.Dto;
 using Buratino.Entities;
 using Buratino.Enums;
 using Buratino.Services.Dto;
@@ -21,8 +20,8 @@ namespace Buratino.Services
         public BondMetric[] Analize()
         {
             var api = new TInvestAPI();
-            var obj = api.GetBonds();
-            var now = DateTime.Now.AddMonths(6);
+            var obj = api.GetAllBonds();
+            var now = DateTime.Now.AddMonths(6).AddDays(-2);
 
             var filtered = obj.Instruments
                 .Where(x => x.Currency == "rub")
@@ -32,7 +31,6 @@ namespace Buratino.Services
                 .Where(x => x.BuyAvailableFlag)
                 .Where(x => x.SellAvailableFlag)
                 .Where(x => !x.FloatingCouponFlag)
-                .Where(x => !x.PerpetualFlag)
                 .Where(x => !x.PerpetualFlag)
                 .Where(x => x.RealExchange.In("REAL_EXCHANGE_MOEX", "REAL_EXCHANGE_RTS"))
                 .Where(x => !x.ForQualInvestorFlag)
@@ -58,6 +56,12 @@ namespace Buratino.Services
                 var instrument = filtered.FirstOrDefault(x => x.Instrument.Uid == uid);
                 instrument.Coupons = coupons;
             }
+
+            //Расчет
+            foreach (var bondMetric in filtered)
+            {
+                bondMetric.CalcMarkers();
+            }
             return filtered;
         }
 
@@ -67,7 +71,7 @@ namespace Buratino.Services
             var bonds = api.GetPortfolio(account);
             var now = DateTime.Now.AddMonths(6);
 
-            var allBonds = api.GetBonds();
+            var allBonds = api.GetAllBonds();
 
             var bondMetrics = bonds.Positions
                 .Where(x => x.InstrumentType == "bond")
@@ -92,6 +96,44 @@ namespace Buratino.Services
                 instrument.Coupons = coupons;
             }
             return bondMetrics;
+        }
+
+        /// <summary>
+        /// Возвращает список для продажи облигаций, отсортированный по моментальной доходности.
+        /// </summary>
+        /// <param name="account"></param>
+        /// <returns></returns>
+        public BondHistory[] GetQueueToSellByProfit(long account)
+        {
+            //цена покупки с коммисией и НКД - текущая цена с коммисией и НКД
+            var api = new TInvestAPI();
+            var bonds = api.GetPortfolio(account);
+            var operations = api.GetOperations(account).Items.Where(x => x.Type == OperationType.OPERATION_TYPE_BUY);
+
+
+            var bondHistories = bonds.Positions
+                .Where(x => x.InstrumentType == "bond")
+                .Select(x => new BondHistory()
+                {
+                    Position = x,
+                })
+                .ToArray();
+
+            //Поиск цены покупки
+            foreach (var bondHistory in bondHistories)
+            {
+                bondHistory.TotalBuyPrice = operations
+                    .FirstOrDefault(x => x.InstrumentUid == bondHistory.Position.InstrumentUid)
+                    .Payment.Total;
+            }
+
+            //Расчет цены продажи
+            foreach (var bondHistory in bondHistories)
+            {
+                bondHistory.TotalSellPrice = bondHistory.Position.CurrentPrice.Total * 1.003m + bondHistory.Position.CurrentNkd.Total;
+            }
+
+            return bondHistories.OrderByDescending(x => x.Diff).ToArray();
         }
 
         /// <summary>
@@ -179,7 +221,7 @@ namespace Buratino.Services
             var edited = new List<InvestCharge>();
 
             var api = new TInvestAPI();
-            var opHis = api.GetOperations(accountId.ToString());
+            var opHis = api.GetOperations(accountId);
             var ops = opHis.Items.Where(x => x.Type == OperationType.OPERATION_TYPE_INPUT || x.Type == OperationType.OPERATION_TYPE_OUTPUT)
                 .Select(x => new KeyValuePair<DateTime, decimal>(x.Date.Date, x.Payment.Units))
                 .GroupBy(x => x.Key)
