@@ -110,7 +110,6 @@ namespace Buratino.Services
             var bonds = api.GetPortfolio(account);
             var operations = api.GetOperations(account).Items.Where(x => x.Type == OperationType.OPERATION_TYPE_BUY);
 
-
             var bondHistories = bonds.Positions
                 .Where(x => x.InstrumentType == "bond")
                 .Select(x => new BondHistory()
@@ -134,6 +133,43 @@ namespace Buratino.Services
             }
 
             return bondHistories.OrderByDescending(x => x.Diff).ToArray();
+        }
+
+        /// <summary>
+        /// Возвращает список для продажи облигаций, по которым упала цена
+        /// </summary>
+        /// <param name="account"></param>
+        /// <returns></returns>
+        public BondHistory[] GetQueueByLoss(long account)
+        {
+            //цена покупки с коммисией и НКД - текущая цена с коммисией и НКД
+            var api = new TInvestAPI();
+            var bonds = api.GetPortfolio(account);
+            var operations = api.GetOperations(account).Items.Where(x => x.Type == OperationType.OPERATION_TYPE_BUY);
+
+            var bondHistories = bonds.Positions
+                .Where(x => x.InstrumentType == "bond")
+                .Select(x => new BondHistory()
+                {
+                    Position = x,
+                })
+                .ToArray();
+
+            //Поиск цены покупки
+            foreach (var bondHistory in bondHistories)
+            {
+                bondHistory.TotalBuyPrice = operations
+                    .FirstOrDefault(x => x.InstrumentUid == bondHistory.Position.InstrumentUid)
+                    .Payment.Total;
+            }
+
+            //Расчет цены продажи
+            foreach (var bondHistory in bondHistories)
+            {
+                bondHistory.TotalSellPrice = bondHistory.Position.CurrentPrice.Total * 1.003m + bondHistory.Position.CurrentNkd.Total;
+            }
+
+            return bondHistories.Where(x => x.Diff < 0).OrderBy(x => x.Diff).ToArray();
         }
 
         /// <summary>
