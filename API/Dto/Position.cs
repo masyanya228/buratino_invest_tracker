@@ -51,5 +51,8 @@ namespace Buratino.API.Dto
 
         [JsonProperty("currentNkd")]
         public CurrentNkd CurrentNkd { get; set; }
+
+        [JsonProperty("ticker")]
+        public string Ticker { get; set; }
     }
 }

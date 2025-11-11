@@ -70,7 +70,7 @@ namespace Buratino.API.Dto
         public string Id { get; set; }
 
         [JsonProperty("quantityRest")]
-        public string QuantityRest { get; set; }
+        public long QuantityRest { get; set; }
 
         [JsonProperty("cancelReason")]
         public string CancelReason { get; set; }
@@ -82,7 +82,7 @@ namespace Buratino.API.Dto
         public List<ChildOperation> ChildOperations { get; set; }
 
         [JsonProperty("quantity")]
-        public string Quantity { get; set; }
+        public long Quantity { get; set; }
 
         [JsonProperty("parentOperationId")]
         public string ParentOperationId { get; set; }
@@ -91,7 +91,7 @@ namespace Buratino.API.Dto
         public string PositionUid { get; set; }
 
         [JsonProperty("quantityDone")]
-        public string QuantityDone { get; set; }
+        public long QuantityDone { get; set; }
 
         [JsonProperty("yieldRelative")]
         public YieldRelative YieldRelative { get; set; }

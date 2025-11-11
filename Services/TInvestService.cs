@@ -144,23 +144,28 @@ namespace Buratino.Services
         {
             //цена покупки с коммисией и НКД - текущая цена с коммисией и НКД
             var api = new TInvestAPI();
-            var bonds = api.GetPortfolio(account);
-            var operations = api.GetOperations(account).Items.Where(x => x.Type == OperationType.OPERATION_TYPE_BUY);
+            var portfolio = api.GetPortfolio(account);
+            var allBons = api.GetAllBonds();
+            var operations = api.GetOperations(account).Items;
 
-            var bondHistories = bonds.Positions
+            var bondHistories = portfolio.Positions
                 .Where(x => x.InstrumentType == "bond")
                 .Select(x => new BondHistory()
                 {
                     Position = x,
+                    Bond = allBons.Instruments.FirstOrDefault(y => y.Uid == x.InstrumentUid)
                 })
                 .ToArray();
 
             //Поиск цены покупки
             foreach (var bondHistory in bondHistories)
             {
-                bondHistory.TotalBuyPrice = operations
-                    .FirstOrDefault(x => x.InstrumentUid == bondHistory.Position.InstrumentUid)
-                    .Payment.Total;
+                bondHistory.Operations = operations
+                    .Where(x => x.InstrumentUid == bondHistory.Position.InstrumentUid)
+                    .ToArray();
+                bondHistory.TotalBuyPrice = bondHistory.Operations
+                    .Where(x => x.Type == OperationType.OPERATION_TYPE_BUY)
+                    .Sum(x => x.Payment.Total);
             }
 
             //Расчет цены продажи
@@ -169,7 +174,150 @@ namespace Buratino.Services
                 bondHistory.TotalSellPrice = bondHistory.Position.CurrentPrice.Total * 1.003m + bondHistory.Position.CurrentNkd.Total;
             }
 
-            return bondHistories.Where(x => x.Diff < 0).OrderBy(x => x.Diff).ToArray();
+            return bondHistories
+                .Where(x => x.Diff < 0)
+                .OrderBy(x => x.Diff)
+                .ToArray();
+        }
+
+        /// <summary>
+        /// Возвращает список для продажи облигаций, по которым упала цена
+        /// </summary>
+        /// <param name="account"></param>
+        /// <returns></returns>
+        public string GetBondBaseProfitTable(long account)
+        {
+            //цена покупки с коммисией и НКД - текущая цена с коммисией и НКД
+            var api = new TInvestAPI();
+            var portfolio = api.GetPortfolio(account);
+            var allBons = api.GetAllBonds();
+            var operations = api.GetOperations(account).Items;
+
+            var bondHistories = portfolio.Positions
+                .Where(x => x.InstrumentType == "bond")
+                .Select(x => new BondHistory()
+                {
+                    Position = x,
+                    Bond = allBons.Instruments.FirstOrDefault(y => y.Uid == x.InstrumentUid)
+                })
+                .ToArray();
+
+            //Поиск цены покупки
+            foreach (var bondHistory in bondHistories)
+            {
+                bondHistory.Operations = operations
+                    .Where(x => x.InstrumentUid == bondHistory.Position.InstrumentUid)
+                    .ToArray();
+                bondHistory.TotalBuyPrice = bondHistory.Operations
+                    .Where(x => x.Type == OperationType.OPERATION_TYPE_BUY)
+                    .Sum(x => x.Payment.Total);
+            }
+
+            //Расчет цены продажи
+            foreach (var bondHistory in bondHistories)
+            {
+                bondHistory.TotalSellPrice = bondHistory.Position.CurrentPrice.Total * 1.003m + bondHistory.Position.CurrentNkd.Total;
+            }
+
+            //todo - Правильно считать все операции по облигации
+            return bondHistories
+                .OrderBy(x => x.Diff)
+                .Select(x => $"{x}\t{x.TotalBuyPrice}\t{x.TotalSellPrice}\t{x.Diff}\t{x.Coupons.Where(y => y.Type == OperationType.OPERATION_TYPE_COUPON || y.Type == OperationType.OPERATION_TYPE_BOND_REPAYMENT || y.Type == OperationType.OPERATION_TYPE_BOND_REPAYMENT_FULL).Sum(y => y.Payment.Total)}")
+                .Join("\r\n");
+        }
+
+        /// <summary>
+        /// Возвращает список для продажи облигаций, по которым упала цена
+        /// </summary>
+        /// <param name="account"></param>
+        /// <returns></returns>
+        public string GetDiversificationByBrand(long account)
+        {
+            //цена покупки с коммисией и НКД - текущая цена с коммисией и НКД
+            var api = new TInvestAPI();
+            var portfolio = api.GetPortfolio(account);
+            var allBons = api.GetAllBonds();
+            var operations = api.GetOperations(account).Items;
+
+            var bondHistories = portfolio.Positions
+                .Where(x => x.InstrumentType == "bond")
+                .Select(x => new BondHistory()
+                {
+                    Position = x,
+                    Bond = allBons.Instruments.FirstOrDefault(y => y.Uid == x.InstrumentUid)
+                })
+                .ToArray();
+
+            //Поиск цены покупки
+            foreach (var bondHistory in bondHistories)
+            {
+                bondHistory.Operations = operations
+                    .Where(x => x.InstrumentUid == bondHistory.Position.InstrumentUid)
+                    .ToArray();
+                bondHistory.TotalBuyPrice = bondHistory.Operations
+                    .Where(x => x.Type == OperationType.OPERATION_TYPE_BUY)
+                    .Sum(x => x.Payment.Total);
+            }
+
+            //Расчет цены продажи
+            foreach (var bondHistory in bondHistories)
+            {
+                bondHistory.TotalSellPrice = bondHistory.Position.CurrentPrice.Total * 1.003m + bondHistory.Position.CurrentNkd.Total;
+            }
+
+            //todo - Правильно считать все операции по облигации
+            return bondHistories
+                .GroupBy(x => x.Bond.Brand.LogoName)
+                .OrderBy(x => x.Sum(y => y.Position.Quantity.Total * y.Position.CurrentPrice.Total))
+                .Select(x => $"{x.Key}\t{x.Sum(y => y.Position.Quantity.Total * y.Position.CurrentPrice.Total)}")
+                .Join("\r\n");
+        }
+
+        /// <summary>
+        /// Возвращает список для продажи облигаций, по которым упала цена
+        /// </summary>
+        /// <param name="account"></param>
+        /// <returns></returns>
+        public string GetDiversificationBySector(long account)
+        {
+            //цена покупки с коммисией и НКД - текущая цена с коммисией и НКД
+            var api = new TInvestAPI();
+            var portfolio = api.GetPortfolio(account);
+            var allBons = api.GetAllBonds();
+            var operations = api.GetOperations(account).Items;
+
+            var bondHistories = portfolio.Positions
+                .Where(x => x.InstrumentType == "bond")
+                .Select(x => new BondHistory()
+                {
+                    Position = x,
+                    Bond = allBons.Instruments.FirstOrDefault(y => y.Uid == x.InstrumentUid)
+                })
+                .ToArray();
+
+            //Поиск цены покупки
+            foreach (var bondHistory in bondHistories)
+            {
+                bondHistory.Operations = operations
+                    .Where(x => x.InstrumentUid == bondHistory.Position.InstrumentUid)
+                    .ToArray();
+                bondHistory.TotalBuyPrice = bondHistory.Operations
+                    .Where(x => x.Type == OperationType.OPERATION_TYPE_BUY)
+                    .Sum(x => x.Payment.Total);
+            }
+
+            //Расчет цены продажи
+            foreach (var bondHistory in bondHistories)
+            {
+                bondHistory.TotalSellPrice = bondHistory.Position.CurrentPrice.Total * 1.003m + bondHistory.Position.CurrentNkd.Total;
+            }
+
+            //todo - Правильно считать все операции по облигации
+            return bondHistories
+                .GroupBy(x => x.Bond.Sector)
+                .OrderBy(x => x.Sum(y => y.Position.Quantity.Total * y.Position.CurrentPrice.Total))
+                .Select(x => $"{x.Key}\t{x.GroupBy(y => y.Bond.Brand.LogoName).Count()}\t{x.Sum(y => y.Position.Quantity.Total * y.Position.CurrentPrice.Total)}")
+                .Join("\r\n");
         }
 
         /// <summary>

@@ -27,7 +27,14 @@ public class Program
         //var riskGroups = newValue.GroupBy(x => x.Instrument.RiskLevel).ToList();
         //var notFixed = newValue.Where(x => x.IsFixedCoupons()).ToArray();
         //var avg = newValue.Where(x => x.IsFixedCoupons()).Average(x => x.GetYearlyIncome());
-        var sumText = new TInvestService().GetBondAnalizeTable();
+        var queueLoss = new TInvestService().GetDiversificationByBrand(2287699144);
+        var sumText = new TInvestService().GetQueueByLoss(2287699144)
+            .Select(x => new
+            {
+                x.Bond.Name,
+                x.TotalBuyPrice
+            })
+            .ToTableSheet();
             //.Select(x =>
             //{
             //    //RUB
