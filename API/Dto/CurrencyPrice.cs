@@ -10,9 +10,9 @@ namespace Buratino.API.Dto
         public decimal GetInRub()
         {
             if (Currency == "rub")
-                return Units;
+                return Total;
             if (Currency == "usd")
-                return Units * 80.85m;
+                return Total * 80.85m;
             throw new ArgumentOutOfRangeException();
         }
     }

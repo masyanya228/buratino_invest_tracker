@@ -15,9 +15,18 @@ namespace Buratino.Analitics.Dto
         /// </summary>
         public decimal TotalBuyPrice { get; set; }
 
+        public decimal AvgBuyPrice => TotalBuyPrice / Position.QuantityLots.Total;
+
         public decimal TotalSellPrice { get; set; }
 
-        public decimal Diff => TotalSellPrice + TotalBuyPrice;
+        /// <summary>
+        /// Сумма всех выплат
+        /// </summary>
+        public decimal TotalIncome => Coupons.Sum(x => x.Payment.GetInRub());
+
+        public decimal Progress => TotalIncome / -TotalBuyPrice * 100;
+
+        public decimal Diff => TotalSellPrice + AvgBuyPrice;
 
         public Instrument? Bond { get; set; }
 

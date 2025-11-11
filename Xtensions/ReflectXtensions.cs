@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace Buratino.Xtensions
 {
@@ -495,6 +496,23 @@ namespace Buratino.Xtensions
                 .ToArray();
 
             return entityMappers;
+        }
+
+        public static string ToTableSheet<T>(this IEnumerable<T> array)
+        {
+            var type = array.First().GetType();
+            var fields = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            StringBuilder builder = new StringBuilder();
+            foreach (var item in array)
+            {
+                foreach (var field in fields)
+                {
+                    builder.Append(field.GetValue(item).ToString());
+                    builder.Append('\t');
+                }
+                builder.Append("\r\n");
+            }
+            return builder.ToString();
         }
     }
 }

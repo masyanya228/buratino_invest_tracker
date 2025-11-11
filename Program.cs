@@ -27,13 +27,28 @@ public class Program
         //var riskGroups = newValue.GroupBy(x => x.Instrument.RiskLevel).ToList();
         //var notFixed = newValue.Where(x => x.IsFixedCoupons()).ToArray();
         //var avg = newValue.Where(x => x.IsFixedCoupons()).Average(x => x.GetYearlyIncome());
-        var queueLoss = new TInvestService().GetDiversificationByBrand(2287699144);
-        var sumText = new TInvestService().GetQueueByLoss(2287699144)
-            .Select(x => new
-            {
-                x.Bond.Name,
-                x.TotalBuyPrice
-            })
+        //var queueLoss = new TInvestService().GetDiversificationByBrand(2287699144);
+        var midBalance = new TInvestService().GetMidBalance(2287699144);
+        var midInvested = new TInvestService().GetMidInvested(2287699144);
+        var bondHistory = new TInvestService().GetQueueByReturn(2287699144);
+        var start = new DateTime(2025, 10, 13);
+        var length = (decimal)(DateTime.Now - start).TotalDays;
+
+        var profit = bondHistory.Sum(x => x.TotalIncome);
+        var profitByBalance = profit / midBalance / length * 365.25m * 100;
+        var profitByInvested = profit / midInvested / length * 365.25m * 100;
+
+        var sumText = bondHistory
+             .Select(x => new
+             {
+                 x.Bond.Name,
+                 x.TotalBuyPrice,
+                 x.AvgBuyPrice,
+                 x.TotalSellPrice,
+                 Nominal = x.Bond.Nominal.GetInRub(),
+                 Coupons = x.TotalIncome,
+                 x.Progress
+             })
             .ToTableSheet();
             //.Select(x =>
             //{

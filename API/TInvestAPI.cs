@@ -218,15 +218,15 @@ namespace Buratino.API
             });
             var resp = restClient.Execute(restRequest);
             var obj = JsonConvert.DeserializeObject<OperationHistory>(resp.Content);
-            if(obj.Items.Where(x => x.Type.NotIn(
-                Enums.OperationType.OPERATION_TYPE_BROKER_FEE,
-                Enums.OperationType.OPERATION_TYPE_BUY,
-                Enums.OperationType.OPERATION_TYPE_COUPON,
-                Enums.OperationType.OPERATION_TYPE_INPUT))
-                .Any())
-            {
-                throw new Exception("Новый тип операции");
-            }
+            //if(obj.Items.Where(x => x.Type.NotIn(
+            //    Enums.OperationType.OPERATION_TYPE_BROKER_FEE,
+            //    Enums.OperationType.OPERATION_TYPE_BUY,
+            //    Enums.OperationType.OPERATION_TYPE_COUPON,
+            //    Enums.OperationType.OPERATION_TYPE_INPUT))
+            //    .Any())
+            //{
+            //    throw new Exception("Новый тип операции");
+            //}
             return obj;
         }
     }

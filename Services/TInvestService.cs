@@ -1,5 +1,6 @@
 ﻿using Buratino.Analitics.Dto;
 using Buratino.API;
+using Buratino.API.Dto;
 using Buratino.Entities;
 using Buratino.Enums;
 using Buratino.Services.Dto;
@@ -177,6 +178,50 @@ namespace Buratino.Services
             return bondHistories
                 .Where(x => x.Diff < 0)
                 .OrderBy(x => x.Diff)
+                .ToArray();
+        }
+
+        /// <summary>
+        /// Возвращает список для продажи облигаций, по которым упала цена
+        /// </summary>
+        /// <param name="account"></param>
+        /// <returns></returns>
+        public BondHistory[] GetQueueByReturn(long account)
+        {
+            //цена покупки с коммисией и НКД - текущая цена с коммисией и НКД
+            var api = new TInvestAPI();
+            var portfolio = api.GetPortfolio(account);
+            var allBons = api.GetAllBonds();
+            var operations = api.GetOperations(account).Items;
+
+            var bondHistories = portfolio.Positions
+                .Where(x => x.InstrumentType == "bond")
+                .Select(x => new BondHistory()
+                {
+                    Position = x,
+                    Bond = allBons.Instruments.FirstOrDefault(y => y.Uid == x.InstrumentUid)
+                })
+                .ToArray();
+
+            //Поиск цены покупки
+            foreach (var bondHistory in bondHistories)
+            {
+                bondHistory.Operations = operations
+                    .Where(x => x.InstrumentUid == bondHistory.Position.InstrumentUid)
+                    .ToArray();
+                bondHistory.TotalBuyPrice = bondHistory.Operations
+                    .Where(x => x.Type == OperationType.OPERATION_TYPE_BUY)
+                    .Sum(x => x.Payment.Total);
+            }
+
+            //Расчет цены продажи
+            foreach (var bondHistory in bondHistories)
+            {
+                bondHistory.TotalSellPrice = bondHistory.Position.CurrentPrice.Total * 1.003m + bondHistory.Position.CurrentNkd.Total;
+            }
+
+            return bondHistories
+                .OrderByDescending(x => x.Progress)
                 .ToArray();
         }
 
@@ -438,6 +483,93 @@ namespace Buratino.Services
                 Edited = edited,
                 Removed = removed
             };
+        }
+
+        /// <summary>
+        /// Средняя сумма вложенных собственных средств
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <returns></returns>
+        public decimal GetMidBalance(long accountId)
+        {
+            var api = new TInvestAPI();
+            var opHis = api.GetOperations(accountId);
+            var ops = opHis.Items.Where(x => x.Type == OperationType.OPERATION_TYPE_INPUT || x.Type == OperationType.OPERATION_TYPE_OUTPUT)
+                .Select(x => new KeyValuePair<DateTime, decimal>(x.Date.Date, x.Payment.GetInRub()))
+                .GroupBy(x => x.Key)
+                .Select(x => new KeyValuePair<DateTime, decimal>(x.Key, x.Sum(y => y.Value)))
+                .Where(x => x.Value != 0)
+                .OrderBy(x => x.Key)
+                .ToArray();
+
+            var now = DateTime.Now;
+            decimal totalDays = (decimal)(now - ops.Last().Key).TotalDays;
+            decimal totalMoneyDays = 0;
+            for (int i = 0; i < ops.Length; i++)
+            {
+                var label = ops[i];
+                var moneyDays = (decimal)(now - label.Key).TotalDays;
+                totalMoneyDays += label.Value * moneyDays;
+            }
+            return totalMoneyDays / totalDays;
+        }
+
+        /// <summary>
+        /// Средний баланс инструментов
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <returns></returns>
+        public decimal GetMidInvested(long accountId)
+        {
+            var api = new TInvestAPI();
+            var opHis = api.GetOperations(accountId);
+            var ops = opHis.Items.Where(x => x.Type == OperationType.OPERATION_TYPE_BUY || x.Type == OperationType.OPERATION_TYPE_SELL)
+                .Select(x => new KeyValuePair<DateTime, decimal>(x.Date.Date, x.Payment.GetInRub()))
+                .GroupBy(x => x.Key)
+                .Select(x => new KeyValuePair<DateTime, decimal>(x.Key, x.Sum(y => y.Value)))
+                .Where(x => x.Value != 0)
+                .OrderBy(x => x.Key)
+                .ToArray();
+
+            var now = DateTime.Now;
+            decimal totalDays = (decimal)(now - ops.Last().Key).TotalDays;
+            decimal totalMoneyDays = 0;
+            for (int i = 0; i < ops.Length; i++)
+            {
+                var label = ops[i];
+                var moneyDays = (decimal)(now - label.Key).TotalDays;
+                totalMoneyDays += label.Value * moneyDays;
+            }
+            return -totalMoneyDays / totalDays;
+        }
+
+        /// <summary>
+        /// Суммарный доход с девидендов
+        /// </summary>
+        /// <param name="accountId"></param>
+        /// <returns></returns>
+        public decimal GetTotalIncome(long accountId)
+        {
+            var api = new TInvestAPI();
+            var opHis = api.GetOperations(accountId);
+            var ops = opHis.Items.Where(x => x.Type == OperationType.OPERATION_TYPE_BUY || x.Type == OperationType.OPERATION_TYPE_SELL)
+                .Select(x => new KeyValuePair<DateTime, decimal>(x.Date.Date, x.Payment.GetInRub()))
+                .GroupBy(x => x.Key)
+                .Select(x => new KeyValuePair<DateTime, decimal>(x.Key, x.Sum(y => y.Value)))
+                .Where(x => x.Value != 0)
+                .OrderBy(x => x.Key)
+                .ToArray();
+
+            var now = DateTime.Now;
+            decimal totalDays = (decimal)(now - ops.Last().Key).TotalDays;
+            decimal totalMoneyDays = 0;
+            for (int i = 0; i < ops.Length; i++)
+            {
+                var label = ops[i];
+                var moneyDays = (decimal)(now - label.Key).TotalDays;
+                totalMoneyDays += label.Value * moneyDays;
+            }
+            return -totalMoneyDays / totalDays;
         }
     }
 }
